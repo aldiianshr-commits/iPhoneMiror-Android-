@@ -38,6 +38,7 @@ class DataStoreSettingsRepository(private val context: Context) : SettingsReposi
         val INVERT_SCROLL = booleanPreferencesKey("invert_scroll")
         val WDA_URL = stringPreferencesKey("wda_url")
         val TOUCH_INDICATORS = booleanPreferencesKey("touch_indicators")
+        val TOUCH_STATUS_BAR = booleanPreferencesKey("touch_status_bar")
         val POINTER_SPEED = floatPreferencesKey("pointer_speed")
         val DEBUG = booleanPreferencesKey("debug_logging")
     }
@@ -64,6 +65,7 @@ class DataStoreSettingsRepository(private val context: Context) : SettingsReposi
             invertScroll = p[Keys.INVERT_SCROLL] ?: d.invertScroll,
             wdaUrl = p[Keys.WDA_URL] ?: d.wdaUrl,
             showTouchIndicators = p[Keys.TOUCH_INDICATORS] ?: d.showTouchIndicators,
+            showTouchStatusBar = p[Keys.TOUCH_STATUS_BAR] ?: d.showTouchStatusBar,
             pointerSpeed = p[Keys.POINTER_SPEED] ?: d.pointerSpeed,
             debugLogging = p[Keys.DEBUG] ?: d.debugLogging,
         )
@@ -91,6 +93,7 @@ class DataStoreSettingsRepository(private val context: Context) : SettingsReposi
             p[Keys.INVERT_SCROLL] = n.invertScroll
             p[Keys.WDA_URL] = n.wdaUrl.trim()
             p[Keys.TOUCH_INDICATORS] = n.showTouchIndicators
+            p[Keys.TOUCH_STATUS_BAR] = n.showTouchStatusBar
             p[Keys.POINTER_SPEED] = n.pointerSpeed
             p[Keys.DEBUG] = n.debugLogging
         }

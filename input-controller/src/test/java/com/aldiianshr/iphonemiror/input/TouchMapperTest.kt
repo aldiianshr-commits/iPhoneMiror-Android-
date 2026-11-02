@@ -81,3 +81,32 @@ class TouchMapperTest {
         assertEquals(425 to 196, TouchMapper.toPoints(NPoint(0.5f, 0.5f), 393, 852, videoLandscape = true))
     }
 }
+
+class WdaUrlParsingTest {
+    private fun p(s: String) = com.aldiianshr.iphonemiror.input.touch.WebDriverAgentClient.parse(s)
+
+    @Test fun ipv4AndHostnames() {
+        assertEquals("192.168.1.20" to 8100, p("http://192.168.1.20:8100").let { it.host to it.port })
+        assertEquals("192.168.1.20" to 8100, p("192.168.1.20").let { it.host to it.port })
+        assertEquals("iphone.local" to 9000, p("http://iphone.local:9000/").let { it.host to it.port })
+    }
+
+    @Test fun ipv6LinkLocalWithZoneFromAirPlay() {
+        // The exact form an iPhone connection produced on a real Xiaomi Pad 6.
+        val legacy = p("http://fe80::820:5998:b9ee:a929%wlan0:8100")
+        assertEquals("fe80::820:5998:b9ee:a929%wlan0", legacy.host)
+        assertEquals(8100, legacy.port)
+        assertEquals("http://[fe80::820:5998:b9ee:a929%wlan0]:8100", legacy.url)
+        assertEquals("[fe80::820:5998:b9ee:a929]:8100", legacy.hostHeader)
+        val bracketed = p("http://[fe80::820:5998:b9ee:a929%25wlan0]:8100")
+        assertEquals("fe80::820:5998:b9ee:a929%wlan0", bracketed.host)
+        assertEquals(8100, p("[2001:db8::1]").port)
+        assertEquals("http://[fe80::1%wlan0]:8100",
+            com.aldiianshr.iphonemiror.input.touch.WebDriverAgentClient.urlFor("fe80::1%wlan0"))
+        assertEquals("http://192.168.1.20:8100",
+            com.aldiianshr.iphonemiror.input.touch.WebDriverAgentClient.urlFor("192.168.1.20"))
+    }
+
+    @Test(expected = java.io.IOException::class)
+    fun rejectsBadPort() { p("http://192.168.1.20:99999") }
+}

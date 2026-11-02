@@ -93,7 +93,7 @@ class TouchControlManager(
     /** IP address of the mirroring iPhone (from the AirPlay connection) for the default WDA URL. */
     fun setPhoneAddress(ip: String?) { phoneAddress = ip; recompute() }
 
-    fun defaultWdaUrl(): String? = phoneAddress?.let { "http://$it:8100" }
+    fun defaultWdaUrl(): String? = phoneAddress?.let { WebDriverAgentClient.urlFor(it) }
 
     // ---------------- Touch input ----------------
 

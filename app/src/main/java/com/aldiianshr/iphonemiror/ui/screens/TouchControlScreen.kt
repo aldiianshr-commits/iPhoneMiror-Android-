@@ -93,6 +93,9 @@ fun TouchControlScreen(receiverVm: ReceiverViewModel, onNavigate: (AppScreen) ->
             Toggle("Indikator sentuhan", "Lingkaran di posisi jari & warna status gesture terakhir", s.showTouchIndicators) { v ->
                 vm.update { it.copy(showTouchIndicators = v) }
             }
+            Toggle("Bar status sentuhan di Mirroring", "Pil kecil di pojok kiri bawah; bisa disembunyikan dari layar Mirroring", s.showTouchStatusBar) { v ->
+                vm.update { it.copy(showTouchStatusBar = v) }
+            }
         }
 
         ResponsiveColumns(
@@ -139,7 +142,11 @@ fun TouchControlScreen(receiverVm: ReceiverViewModel, onNavigate: (AppScreen) ->
                     Chip(if (touch.xctest.available) "Terhubung" else "Tidak terhubung", if (touch.xctest.available) Palette.Ok else Palette.TextTertiary)
                 }) {
                     var url by remember(s.wdaUrl, receiver.device?.address) {
-                        mutableStateOf(s.wdaUrl.ifBlank { vm.defaultWdaUrl() ?: "" })
+                        mutableStateOf(
+                            s.wdaUrl.takeIf { it.isNotBlank() }
+                                ?.let { runCatching { com.aldiianshr.iphonemiror.input.touch.WebDriverAgentClient.parse(it).url }.getOrDefault(it) }
+                                ?: vm.defaultWdaUrl() ?: "",
+                        )
                     }
                     OutlinedTextField(
                         value = url, onValueChange = { url = it }, singleLine = true,

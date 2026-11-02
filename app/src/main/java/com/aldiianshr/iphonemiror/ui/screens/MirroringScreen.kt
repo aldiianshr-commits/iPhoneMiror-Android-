@@ -32,6 +32,7 @@ import androidx.compose.material.icons.automirrored.outlined.Backspace
 import androidx.compose.material.icons.automirrored.outlined.KeyboardReturn
 import androidx.compose.material.icons.outlined.AspectRatio
 import androidx.compose.material.icons.outlined.Cast
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Fullscreen
 import androidx.compose.material.icons.outlined.FullscreenExit
 import androidx.compose.material.icons.outlined.Home
@@ -204,6 +205,9 @@ fun MirroringScreen(vm: ReceiverViewModel, fullscreen: Boolean, onFullscreen: (B
                 ToolButton(Icons.Outlined.ZoomOutMap, "Reset zoom") { zoom = 1f; pan = Offset.Zero }
                 ToolButton(Icons.Outlined.Home, "Home iPhone") { touchVm.home() }
                 ToolButton(Icons.Outlined.Keyboard, "Keyboard", active = showKeyboard) { showKeyboard = !showKeyboard }
+                ToolButton(Icons.Outlined.TouchApp, "Status sentuhan", "btn_touch_status", active = settings.showTouchStatusBar) {
+                    touchVm.update { it.copy(showTouchStatusBar = !it.showTouchStatusBar) }
+                }
                 ToolButton(Icons.Outlined.QueryStats, "Statistik", active = showStats) { showStats = !showStats }
                 Spacer(Modifier.width(6.dp))
                 TextButton(
@@ -226,11 +230,16 @@ fun MirroringScreen(vm: ReceiverViewModel, fullscreen: Boolean, onFullscreen: (B
             ) { Icon(Icons.Outlined.MoreHoriz, "Tampilkan kontrol") }
         }
 
-        TouchStatusBar(
-            mode = mode,
-            touch = touch,
-            modifier = Modifier.align(Alignment.BottomStart).padding(12.dp),
-        )
+        // Touch status: a small pill only while streaming; hidden with the rest of the chrome in
+        // fullscreen, and can be switched off entirely (toolbar button / Kontrol Sentuh page).
+        if (streaming && settings.showTouchStatusBar && (!fullscreen || chromeVisible)) {
+            TouchStatusBar(
+                mode = mode,
+                touch = touch,
+                onHide = { touchVm.update { it.copy(showTouchStatusBar = false) } },
+                modifier = Modifier.align(Alignment.BottomStart).padding(12.dp),
+            )
+        }
 
         if (showStats) {
             StatsPanel(stats, state.sessionStartedAt, touch, Modifier.align(Alignment.BottomEnd).padding(12.dp))
@@ -319,41 +328,91 @@ private fun TouchIndicators(displayed: Rect, live: Map<Int, NPoint>, last: com.a
 }
 
 @Composable
-private fun TouchStatusBar(mode: DisplayMode, touch: com.aldiianshr.iphonemiror.input.touch.TouchControlState, modifier: Modifier) {
+private fun TouchStatusBar(
+    mode: DisplayMode,
+    touch: com.aldiianshr.iphonemiror.input.touch.TouchControlState,
+    onHide: () -> Unit,
+    modifier: Modifier,
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val fb = touch.lastFeedback
+    // Gesture feedback is shown briefly, then the pill shrinks back to the backend name only.
+    var showFeedback by remember { mutableStateOf(false) }
+    LaunchedEffect(fb?.gestureId, fb?.status) {
+        if (fb != null) { showFeedback = true; delay(2_500); showFeedback = false }
+    }
+    val (label, color) = when {
+        mode == DisplayMode.VIEW_ONLY -> "View Only" to Palette.TextSecondary
+        touch.activeBackend != null -> "Touch: ${touch.activeBackend!!.label}" to Palette.Ok
+        else -> "Touch: tidak tersedia" to Palette.Warn
+    }
+
+    if (!expanded) {
+        Row(
+            modifier
+                .clip(RoundedCornerShape(50))
+                .background(Color(0xB3141416))
+                .border(1.dp, Palette.Outline, RoundedCornerShape(50))
+                .clickable { expanded = true }
+                .padding(start = 10.dp, end = 4.dp, top = 4.dp, bottom = 4.dp)
+                .testTag("touch_status"),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(Modifier.size(7.dp).clip(RoundedCornerShape(50)).background(color))
+            Spacer(Modifier.width(8.dp))
+            Text(label, style = MaterialTheme.typography.labelMedium, color = Palette.Text, maxLines = 1)
+            if (showFeedback && fb != null && mode == DisplayMode.TOUCH && fb.status != FeedbackStatus.UNSUPPORTED) {
+                Text(
+                    " · " + listOfNotNull(fb.kind?.label, fb.status.label, fb.latencyMs?.let { "$it ms" }).joinToString(" · "),
+                    style = MaterialTheme.typography.labelMedium, color = fb.status.color(), maxLines = 1,
+                    overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 360.dp),
+                )
+            }
+            androidx.compose.material3.IconButton(onClick = onHide, modifier = Modifier.size(26.dp).testTag("touch_status_hide")) {
+                Icon(Icons.Outlined.Close, "Sembunyikan", tint = Palette.TextSecondary, modifier = Modifier.size(14.dp))
+            }
+        }
+        return
+    }
+
     Column(
         modifier.widthIn(max = 560.dp)
-            .clip(RoundedCornerShape(12.dp)).background(Color(0xD9141416))
+            .clip(RoundedCornerShape(12.dp)).background(Color(0xE6141416))
             .border(1.dp, Palette.Outline, RoundedCornerShape(12.dp)).padding(horizontal = 12.dp, vertical = 8.dp)
-            .testTag("touch_status"),
+            .testTag("touch_status_expanded"),
         verticalArrangement = Arrangement.spacedBy(3.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(if (mode == DisplayMode.TOUCH) Icons.Outlined.TouchApp else Icons.Outlined.Visibility, null,
                 tint = Palette.TextSecondary, modifier = Modifier.size(16.dp))
             Spacer(Modifier.width(8.dp))
-            val (text, color) = when {
-                mode == DisplayMode.VIEW_ONLY -> "View Only — sentuhan tidak diteruskan" to Palette.TextSecondary
-                touch.activeBackend != null -> "Touch Control: ${touch.activeBackend!!.label}" to Palette.Ok
-                else -> "Touch Control: Unsupported" to Palette.Bad
-            }
-            Text(text, style = MaterialTheme.typography.labelLarge, color = color)
-            touch.averageResponseMs?.let {
-                Spacer(Modifier.width(10.dp))
-                Text("respon rata-rata $it ms", style = MaterialTheme.typography.labelMedium, color = Palette.TextSecondary)
-            }
-            touch.connectionLatencyMs?.let {
-                Spacer(Modifier.width(10.dp))
-                Text("latensi WDA $it ms", style = MaterialTheme.typography.labelMedium, color = Palette.TextSecondary)
+            Text(
+                if (mode == DisplayMode.TOUCH && touch.activeBackend == null) "Touch Control: Unsupported" else label,
+                style = MaterialTheme.typography.labelLarge, color = color, modifier = Modifier.weight(1f, fill = false),
+            )
+            if (touch.activeBackend != null) {
+                touch.averageResponseMs?.let {
+                    Spacer(Modifier.width(10.dp))
+                    Text("respon rata-rata $it ms", style = MaterialTheme.typography.labelMedium, color = Palette.TextSecondary)
+                }
+                touch.connectionLatencyMs?.let {
+                    Spacer(Modifier.width(10.dp))
+                    Text("latensi WDA $it ms", style = MaterialTheme.typography.labelMedium, color = Palette.TextSecondary)
+                }
             }
         }
         if (mode == DisplayMode.TOUCH && touch.activeBackend == null) {
-            Text(touch.unsupportedReason ?: "", style = MaterialTheme.typography.bodySmall, color = Palette.TextSecondary, maxLines = 3, overflow = TextOverflow.Ellipsis)
+            Text(touch.unsupportedReason ?: "", style = MaterialTheme.typography.bodySmall, color = Palette.TextSecondary, maxLines = 4, overflow = TextOverflow.Ellipsis)
         }
-        touch.lastFeedback?.let { f ->
+        if (fb != null && fb.status != FeedbackStatus.UNSUPPORTED) {
             Text(
-                listOfNotNull(f.kind?.label, f.status.label, f.message).joinToString(" · "),
-                style = MaterialTheme.typography.bodySmall, color = f.status.color(), maxLines = 2, overflow = TextOverflow.Ellipsis,
+                listOfNotNull(fb.kind?.label, fb.status.label, fb.message).joinToString(" · "),
+                style = MaterialTheme.typography.bodySmall, color = fb.status.color(), maxLines = 2, overflow = TextOverflow.Ellipsis,
             )
+        }
+        Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
+            TextButton(onClick = { expanded = false }) { Text("Ciutkan", color = Palette.TextSecondary) }
+            TextButton(onClick = onHide) { Text("Sembunyikan", color = Palette.TextSecondary) }
         }
     }
 }
