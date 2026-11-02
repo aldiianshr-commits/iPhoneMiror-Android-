@@ -5,47 +5,72 @@ import com.aldiianshr.iphonemiror.input.touch.NPoint
 import com.aldiianshr.iphonemiror.input.touch.TouchEvent
 import com.aldiianshr.iphonemiror.input.touch.W3cActions
 import com.aldiianshr.iphonemiror.input.touch.WebDriverAgentClient
-import com.sun.net.httpserver.HttpServer
 import org.json.JSONObject
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import java.net.InetSocketAddress
+import java.net.InetAddress
+import java.net.ServerSocket
 import java.util.concurrent.CopyOnWriteArrayList
 
 class WebDriverAgentTest {
 
-    private lateinit var server: HttpServer
+    private lateinit var server: ServerSocket
     private val requests = CopyOnWriteArrayList<Pair<String, String>>()
 
+    /** Minimal HTTP/1.1 fake of WebDriverAgent (one request per connection). */
     @Before fun setUp() {
-        // Fake WebDriverAgent with the response shapes of the real server.
-        server = HttpServer.create(InetSocketAddress("127.0.0.1", 0), 0)
-        server.createContext("/") { ex ->
-            val body = ex.requestBody.readBytes().decodeToString()
-            val path = ex.requestURI.path
-            requests += "${ex.requestMethod} $path" to body
-            val (code, resp) = when {
-                path == "/status" -> 200 to """{"value":{"ready":true,"os":{"version":"26.1","name":"iOS"},"ios":{"ip":"192.168.1.20"}},"sessionId":null}"""
-                path == "/session" -> 200 to """{"value":{"sessionId":"ABC123","capabilities":{}},"sessionId":"ABC123"}"""
-                path.endsWith("/window/size") -> 200 to """{"value":{"width":393,"height":852},"sessionId":"ABC123"}"""
-                path.endsWith("/actions") -> 200 to """{"value":null,"sessionId":"ABC123"}"""
-                path.endsWith("/wda/keys") -> 200 to """{"value":null}"""
-                path == "/wda/homescreen" -> 200 to """{"value":null}"""
-                else -> 404 to """{"value":{"error":"unknown command","message":"Unhandled endpoint"}}"""
+        server = ServerSocket(0, 50, InetAddress.getByName("127.0.0.1"))
+        Thread {
+            while (!server.isClosed) {
+                val sock = runCatching { server.accept() }.getOrNull() ?: break
+                sock.use { s ->
+                    val input = s.getInputStream().buffered()
+                    val requestLine = readLine(input)
+                    var length = 0
+                    while (true) {
+                        val l = readLine(input)
+                        if (l.isEmpty()) break
+                        if (l.startsWith("Content-Length:", true)) length = l.substringAfter(':').trim().toInt()
+                    }
+                    val body = ByteArray(length).also { var r = 0; while (r < length) r += input.read(it, r, length - r) }.decodeToString()
+                    val (method, path) = requestLine.split(' ').let { it[0] to it[1] }
+                    requests += "$method $path" to body
+                    val (code, resp) = route(path)
+                    val bytes = resp.toByteArray()
+                    val out = s.getOutputStream()
+                    out.write("HTTP/1.1 $code X\r\nContent-Type: application/json\r\nContent-Length: ${bytes.size}\r\nConnection: close\r\n\r\n".toByteArray())
+                    out.write(bytes)
+                    out.flush()
+                }
             }
-            val bytes = resp.toByteArray()
-            ex.sendResponseHeaders(code, bytes.size.toLong())
-            ex.responseBody.use { it.write(bytes) }
-        }
-        server.start()
+        }.apply { isDaemon = true }.start()
     }
 
-    @After fun tearDown() = server.stop(0)
+    private fun readLine(input: java.io.InputStream): String {
+        val sb = StringBuilder()
+        while (true) {
+            val b = input.read()
+            if (b < 0 || b == '\n'.code) return sb.toString().trimEnd('\r')
+            sb.append(b.toChar())
+        }
+    }
 
-    private fun url() = "http://127.0.0.1:${server.address.port}"
+    private fun route(path: String): Pair<Int, String> = when {
+        path == "/status" -> 200 to """{"value":{"ready":true,"os":{"version":"26.1","name":"iOS"},"ios":{"ip":"192.168.1.20"}},"sessionId":null}"""
+        path == "/session" -> 200 to """{"value":{"sessionId":"ABC123","capabilities":{}},"sessionId":"ABC123"}"""
+        path.endsWith("/window/size") -> 200 to """{"value":{"width":393,"height":852},"sessionId":"ABC123"}"""
+        path.endsWith("/actions") -> 200 to """{"value":null,"sessionId":"ABC123"}"""
+        path.endsWith("/wda/keys") -> 200 to """{"value":null}"""
+        path == "/wda/homescreen" -> 200 to """{"value":null}"""
+        else -> 404 to """{"value":{"error":"unknown command","message":"Unhandled endpoint"}}"""
+    }
+
+    @After fun tearDown() = server.close()
+
+    private fun url() = "http://127.0.0.1:${server.localPort}"
 
     @Test fun sessionLifecycleAndActions() {
         val c = WebDriverAgentClient(url())
