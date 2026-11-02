@@ -24,7 +24,7 @@ dependencies {
     implementation(project(":core"))
     implementation(project(":domain"))
     implementation(libs.androidx.core.ktx)
-    implementation(libs.room.runtime)
+    api(libs.room.runtime)
     implementation(libs.room.ktx)
     ksp(libs.room.compiler)
     implementation(libs.datastore.preferences)

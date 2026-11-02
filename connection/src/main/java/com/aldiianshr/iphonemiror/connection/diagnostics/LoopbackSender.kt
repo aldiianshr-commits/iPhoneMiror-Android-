@@ -41,7 +41,8 @@ import javax.crypto.spec.SecretKeySpec
  */
 class LoopbackSender(private val host: String, private val port: Int) : AutoCloseable {
 
-    private val control = Socket().apply { connect(InetSocketAddress(host, port), 3_000); tcpNoDelay = true }
+    // Note: inside Socket.apply{}, `port` would resolve to Socket.getPort(), so connect explicitly.
+    private val control = Socket().also { it.connect(InetSocketAddress(host, port), 3_000); it.tcpNoDelay = true }
     private val input: InputStream = control.getInputStream().buffered()
     private val output: OutputStream = control.getOutputStream()
     private var cseq = 0
@@ -176,10 +177,10 @@ class LoopbackSender(private val host: String, private val port: Int) : AutoClos
 
     fun sendCodecConfig(sps: ByteArray, pps: ByteArray, width: Int, height: Int) {
         val payload = ByteBuffer.allocate(6 + 2 + sps.size + 1 + 2 + pps.size).apply {
-            put(1); put(sps.getOrElse(1) { 0 }); put(sps.getOrElse(2) { 0 }); put(sps.getOrElse(3) { 0 })
+            put(1.toByte()); put(sps.getOrElse(1) { 0 }); put(sps.getOrElse(2) { 0 }); put(sps.getOrElse(3) { 0 })
             put(0xFF.toByte()); put(0xE1.toByte())
             putShort(sps.size.toShort()); put(sps)
-            put(1); putShort(pps.size.toShort()); put(pps)
+            put(1.toByte()); putShort(pps.size.toShort()); put(pps)
         }.array()
         writeMirror(MirrorChannel.TYPE_CODEC, payload, 0, width, height)
     }
