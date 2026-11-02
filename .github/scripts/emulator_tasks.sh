@@ -48,6 +48,7 @@ shot 06-apple-account --es start_route ACCOUNT
 shot 07-settings --es start_route SETTINGS
 shot 08-about --es start_route ABOUT
 shot 09-mirroring-waiting --es start_route MIRRORING
+shot 13-touch-control --es start_route TOUCH
 
 # Self-test: real AirPlay handshake + FairPlay + MediaCodec decode over localhost.
 adb shell am start -W -n "$PKG/$ACT" --es start_route MIRRORING --ez start_receiver true --ez run_self_test true > /dev/null

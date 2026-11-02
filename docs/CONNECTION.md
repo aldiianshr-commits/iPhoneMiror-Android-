@@ -53,6 +53,8 @@ yang tidak diketahui dijawab netral dan dicatat di log diagnostik.
 
 ## Bluetooth — kontrol (HID)
 
+> Detail lengkap direct touch (pointer absolut, XCTest, pemetaan, umpan balik): [TOUCH_CONTROL.md](TOUCH_CONTROL.md).
+
 AirPlay adalah protokol satu arah: iPhone **tidak** menerima input sentuh dari penerima AirPlay.
 Cara resmi untuk mengendalikan iPhone dari perangkat lain adalah perangkat input Bluetooth:
 

@@ -29,7 +29,8 @@ Semua screenshot: [docs/screenshots](docs/screenshots).
 | Layar iPhone di tablet | iPhone → Pusat Kontrol → **Pencerminan Layar** → pilih tablet (AirPlay, Wi-Fi yang sama) |
 | Video | H.264 didekripsi (FairPlay) lalu di-decode hardware via **MediaCodec** langsung ke Surface |
 | Audio | AAC-ELD → MediaCodec → AudioTrack low-latency |
-| Kontrol dari tablet | Tablet menjadi **keyboard + mouse Bluetooth** untuk iPhone (AssistiveTouch untuk pointer) |
+| Sentuh langsung (real-time) | Tablet menjadi **pointer absolut Bluetooth HID** (iOS 18+, AssistiveTouch): tap, double tap, long press, swipe, drag & drop, scroll 2 jari |
+| Multi-touch (pinch, 2+ jari) | **XCTest / WebDriverAgent** (alat UI-testing resmi Apple, akun developer sendiri) — lihat [docs/TOUCH_CONTROL.md](docs/TOUCH_CONTROL.md) |
 | USB OTG | Deteksi, izin, dan identifikasi iPhone (UDID/produk). *Mirroring via USB tidak tersedia.* |
 | Bluetooth | Discovery perangkat Apple (BLE) + kanal kontrol HID. *Bukan untuk video.* |
 | Apple Account | Halaman status yang jujur — tidak ada API resmi, tidak ada login, tidak meminta password. |
@@ -50,16 +51,19 @@ Persyaratan: Android 13 (API 33) atau lebih baru, ARM64 (APK tanpa library nativ
 2. Pastikan iPhone dan tablet di **Wi-Fi yang sama**.
 3. iPhone: **Pusat Kontrol → Pencerminan Layar → "iPhoneMiror (…)"**.
 4. Setujui perangkat di tablet (pertama kali). Tampilan **Mirroring** terbuka otomatis.
-5. (Opsional) **Hubungkan iPhone → Kontrol (Bluetooth HID) → Aktifkan**, pasangkan tablet dari
-   iPhone (Pengaturan → Bluetooth), aktifkan **AssistiveTouch** di iPhone untuk pointer.
+5. Sentuh langsung: **Kontrol Sentuh → Aktifkan kontrol Bluetooth**, pasangkan tablet dari iPhone
+   (Pengaturan → Bluetooth), aktifkan **AssistiveTouch**, lalu di Mirroring pilih **Touch Mode**.
+   Bila tidak ada jalur input, aplikasi menampilkan **Touch Control: Unsupported** beserta alasannya.
 
 Tips: jalankan **Pengaturan → Uji mandiri penerima** untuk memverifikasi jalur
 Wi-Fi → dekripsi → decoder di tablet tanpa iPhone. Videonya dilabeli *SELF-TEST — BUKAN IPHONE*.
 
 ## Fitur
 
-- Halaman: Dashboard, Hubungkan iPhone, Device Manager, Mirroring, Riwayat Koneksi,
+- Halaman: Dashboard, Hubungkan iPhone, Device Manager, Mirroring, Kontrol Sentuh, Riwayat Koneksi,
   Akun Apple, Pengaturan, Tentang
+- Direct touch: View Only / Touch Mode / Fullscreen Touch, pemetaan koordinat presisi (letterbox,
+  skala, zoom, orientasi), multi-touch MotionEvent, indikator sentuhan, status input & latensi respon
 - Layout tablet: sidebar kiri, konten tengah, panel status kanan (≥1200 dp), landscape & portrait
 - Mirroring: fullscreen, rasio (Pas/Penuh/Regang), pinch-zoom & pan, statistik live
   (resolusi, fps, bitrate, frame, decoder), kualitas koneksi terukur, Stop Mirroring
