@@ -62,5 +62,22 @@ shot 11-dashboard-after-self-test --es start_route DASHBOARD
 adb logcat -d > "$OUT/app-logcat.txt" 2>&1 || true
 grep -E "AirPlayReceiver|VideoDecoder|SelfTest|MirrorChannel|Pairing|AndroidRuntime" "$OUT/app-logcat.txt" > "$OUT/app-logcat-filtered.txt" || true
 
-echo "instrumented_tests_exit=$TEST_STATUS" > "$OUT/status.txt"
+echo "== Release APK (R8) smoke test =="
+./gradlew -q assembleRelease > /dev/null 2>&1
+REL=com.aldiianshr.iphonemiror
+adb install -r -g app/build/outputs/apk/release/iPhoneMiror-release.apk > "$OUT/release-install.txt" 2>&1
+adb logcat -c
+adb shell am start -W -n "$REL/$ACT" --es start_route SETTINGS > /dev/null
+sleep 6
+adb shell am broadcast -a android.intent.action.CLOSE_SYSTEM_DIALOGS > /dev/null 2>&1 || true
+adb exec-out screencap -p > "$OUT/screens/12-release-build-settings.png"
+RELEASE_PID=$(adb shell pidof $REL | tr -d '\r')
+adb logcat -d -b crash > "$OUT/release-crash-log.txt" 2>&1 || true
+if [ -n "$RELEASE_PID" ] && ! grep -q "$REL" "$OUT/release-crash-log.txt"; then
+  echo "release_smoke=ok pid=$RELEASE_PID" >> "$OUT/status.txt"
+else
+  echo "release_smoke=FAILED" >> "$OUT/status.txt"; TEST_STATUS=1
+fi
+
+echo "instrumented_tests_exit=$TEST_STATUS" >> "$OUT/status.txt"
 exit $TEST_STATUS
