@@ -31,6 +31,7 @@ class NavigationUiTest {
             AppScreen.CONNECT to "Wi-Fi · AirPlay",
             AppScreen.DEVICES to "Perangkat aktif",
             AppScreen.MIRRORING to "Nyalakan penerima dari Dashboard.",
+            AppScreen.TOUCH to "Touch Control: Unsupported",
             AppScreen.HISTORY to "Riwayat kosong",
             AppScreen.ACCOUNT to "Integrasi Apple Account",
             AppScreen.SETTINGS to "Uji mandiri penerima",
@@ -42,6 +43,14 @@ class NavigationUiTest {
             compose.waitForIdle()
             assertTrue("$screen should show '$text'", compose.onAllNodesWithText(text, substring = true).fetchSemanticsNodes().isNotEmpty())
         }
+    }
+
+    @Test fun touchControlReportsUnsupportedWithoutInputPath() {
+        // No Bluetooth HID host and no WebDriverAgent on the emulator: must say so, never pretend.
+        compose.onNodeWithTag("nav_TOUCH").performClick()
+        compose.waitForIdle()
+        compose.onNodeWithText("Touch Control: Unsupported").assertIsDisplayed()
+        assertTrue(compose.onAllNodesWithText("AirPlay hanya mengirim gambar", substring = true).fetchSemanticsNodes().isNotEmpty())
     }
 
     @Test fun mirroringScreenNeverShowsVideoWithoutStream() {

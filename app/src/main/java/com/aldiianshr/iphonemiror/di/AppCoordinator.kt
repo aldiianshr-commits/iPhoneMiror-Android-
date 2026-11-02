@@ -5,6 +5,8 @@ import com.aldiianshr.iphonemiror.core.AppLog
 import com.aldiianshr.iphonemiror.data.repository.RoomHistoryRepository
 import com.aldiianshr.iphonemiror.domain.model.AppSettings
 import com.aldiianshr.iphonemiror.domain.repository.SettingsRepository
+import com.aldiianshr.iphonemiror.input.touch.TouchControlManager
+import com.aldiianshr.iphonemiror.mirroring.MirrorEngine
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -32,6 +34,8 @@ class AppCoordinator @Inject constructor(
     private val holder: SettingsHolder,
     private val receiver: ReceiverController,
     private val history: RoomHistoryRepository,
+    private val touch: TouchControlManager,
+    private val engine: MirrorEngine,
 ) {
     val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
@@ -42,7 +46,11 @@ class AppCoordinator @Inject constructor(
                 holder.set(s)
                 AppLog.debugEnabled = s.debugLogging
                 receiver.applySettings(s)
+                touch.configure(s)
             }
         }
+        // Feed the touch mapper the real stream geometry and the iPhone's address.
+        scope.launch { engine.stats.collect { st -> if (st.hasVideo) touch.setVideoSize(st.width, st.height) } }
+        scope.launch { receiver.state.collect { st -> touch.setPhoneAddress(st.device?.address?.takeUnless { it.startsWith("127.") }) } }
     }
 }

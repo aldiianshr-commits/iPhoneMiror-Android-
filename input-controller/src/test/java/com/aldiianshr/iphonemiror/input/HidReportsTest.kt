@@ -9,7 +9,33 @@ import org.junit.Test
 class HidReportsTest {
 
     @Test fun descriptorCollectionsAreBalanced() {
-        val d = HidReports.DESCRIPTOR.map { it.toInt() and 0xFF }
+        for (abs in listOf(true, false)) checkBalanced(HidReports.descriptor(abs))
+    }
+
+    @Test fun keyboardIsDeclaredFirst() {
+        // iOS only treats the device as a hardware keyboard when the keyboard comes first.
+        val d = HidReports.descriptor(true)
+        assertEquals(0x09, d[2].toInt() and 0xFF)
+        assertEquals(0x06, d[3].toInt() and 0xFF)
+    }
+
+    @Test fun absoluteDescriptorUsesUint16Range() {
+        val d = HidReports.descriptor(true).map { it.toInt() and 0xFF }
+        val idx = (0 until d.size - 6).first { d[it] == 0x26 && d[it + 1] == 0xFF && d[it + 2] == 0x7F }
+        assertTrue(idx > 0)
+        // Input (Data,Var,Abs) for X/Y
+        assertTrue((0 until d.size - 1).any { d[it] == 0x81 && d[it + 1] == 0x02 })
+    }
+
+    @Test fun absMouseReportIsLittleEndian() {
+        assertArrayEquals(byteArrayOf(1, 0xFF.toByte(), 0x7F, 0, 0x40, 0, 0), HidReports.absMouse(1, 40000, 0x4000))
+        assertEquals(7, HidReports.absMouse(0, 0, 0).size)
+        assertArrayEquals(byteArrayOf(0x40, 0), HidReports.consumer(HidReports.CONSUMER_HOME))
+        assertArrayEquals(byteArrayOf(0x21, 0x02), HidReports.consumer(HidReports.CONSUMER_SEARCH))
+    }
+
+    private fun checkBalanced(bytes: ByteArray) {
+        val d = bytes.map { it.toInt() and 0xFF }
         // Walk HID short items and count Collection (0xA1) / End Collection (0xC0).
         var i = 0; var open = 0; var maxDepth = 0
         while (i < d.size) {

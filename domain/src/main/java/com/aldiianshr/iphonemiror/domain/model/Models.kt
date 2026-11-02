@@ -113,9 +113,24 @@ enum class StreamResolution(val width: Int, val height: Int, val label: String) 
     QHD(2560, 1440, "1440p"),
 }
 
-enum class InputMode(val label: String) {
-    TRACKPAD("Trackpad (relatif)"),
-    DIRECT("Sentuh langsung (eksperimental)"),
+/** Which legitimate input path forwards touches to the iPhone. */
+enum class TouchBackendPref(val label: String) {
+    AUTO("Otomatis"),
+    BLUETOOTH_HID("Bluetooth HID"),
+    XCTEST("XCTest / WebDriverAgent"),
+}
+
+/** HID pointer report format. Absolute needs iOS 18+; relative works on older iOS. */
+enum class HidPointerMode(val label: String) {
+    ABSOLUTE("Absolut (iOS 18+)"),
+    RELATIVE("Relatif / trackpad"),
+}
+
+/** How absolute HID coordinates relate to the mirrored picture when the iPhone is in landscape. */
+enum class HidOrientation(val label: String) {
+    FOLLOW_SCREEN("Ikut layar"),
+    PORTRAIT_ROT90("Portrait asli, putar 90°"),
+    PORTRAIT_ROT270("Portrait asli, putar 270°"),
 }
 
 data class AppSettings(
@@ -127,7 +142,14 @@ data class AppSettings(
     val autoOpenMirroring: Boolean = true,
     val keepScreenOn: Boolean = true,
     val lowLatencyDecoder: Boolean = true,
-    val inputMode: InputMode = InputMode.TRACKPAD,
+    val touchBackend: TouchBackendPref = TouchBackendPref.AUTO,
+    val hidPointerMode: HidPointerMode = HidPointerMode.ABSOLUTE,
+    val hidOrientation: HidOrientation = HidOrientation.FOLLOW_SCREEN,
+    val invertScroll: Boolean = false,
+    /** WebDriverAgent base URL; empty = derive from the mirroring iPhone's IP (port 8100). */
+    val wdaUrl: String = "",
+    val showTouchIndicators: Boolean = true,
+    /** Relative (trackpad) pointer speed multiplier. */
     val pointerSpeed: Float = 1.0f,
     val debugLogging: Boolean = false,
 )

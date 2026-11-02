@@ -112,31 +112,46 @@ class ConnectViewModel @Inject constructor(
     }
 }
 
-/** Remote-control input routed to the Bluetooth HID link. */
+/** Direct touch control: touch stream, keyboard, backend setup. */
 @HiltViewModel
-class InputViewModel @Inject constructor(
+class TouchViewModel @Inject constructor(
+    private val touch: com.aldiianshr.iphonemiror.input.touch.TouchControlManager,
     private val hid: BluetoothHidController,
-    private val settingsHolder: SettingsHolder,
+    private val settingsRepo: SettingsRepository,
+    settingsHolder: SettingsHolder,
 ) : ViewModel() {
+    val state = touch.state
+    val livePoints = touch.livePoints
     val hidState: StateFlow<BluetoothHidController.State> = hid.state
     val settings: StateFlow<AppSettings> = settingsHolder.flow
+    private val _wdaMessage = kotlinx.coroutines.flow.MutableStateFlow<String?>(null)
+    val wdaMessage: StateFlow<String?> = _wdaMessage
+    private val _wdaBusy = kotlinx.coroutines.flow.MutableStateFlow(false)
+    val wdaBusy: StateFlow<Boolean> = _wdaBusy
 
-    fun move(dx: Float, dy: Float) {
-        val k = settingsHolder.current.pointerSpeed
-        hid.move(dx * k, dy * k)
+    fun onTouch(e: com.aldiianshr.iphonemiror.input.touch.TouchEvent) = touch.onTouch(e)
+    fun type(text: String) = touch.typeText(text)
+    fun key(usage: Int, modifiers: Int = 0) = touch.key(usage, modifiers)
+    fun consumer(usage: Int) = touch.consumer(usage)
+    fun home() = touch.home()
+    fun mappingTest() = touch.runMappingTest()
+    fun defaultWdaUrl(): String? = touch.defaultWdaUrl()
+    fun startHid() = hid.start()
+    fun update(transform: (AppSettings) -> AppSettings) = viewModelScope.launch { settingsRepo.update(transform) }
+
+    fun connectWda(url: String) {
+        if (url.isBlank()) { _wdaMessage.value = "Isi URL WebDriverAgent (mis. http://192.168.1.20:8100)"; return }
+        viewModelScope.launch {
+            _wdaBusy.value = true
+            _wdaMessage.value = "Menghubungkan ke $url…"
+            touch.connectWda(url.trim())
+                .onSuccess { _wdaMessage.value = it }
+                .onFailure { _wdaMessage.value = "Gagal: ${it.message}" }
+            _wdaBusy.value = false
+        }
     }
-    fun scroll(amount: Float) = hid.scroll(amount)
-    fun click() = hid.click()
-    fun rightClick() = hid.click(com.aldiianshr.iphonemiror.input.HidReports.BUTTON_RIGHT)
-    fun press() = hid.press(com.aldiianshr.iphonemiror.input.HidReports.BUTTON_LEFT)
-    fun release() = hid.release(com.aldiianshr.iphonemiror.input.HidReports.BUTTON_LEFT)
-    fun tapAt(u: Float, v: Float) {
-        val base = (900 * settingsHolder.current.pointerSpeed).toInt()
-        hid.tapAt(u, v, countsAcross = base, countsDown = (base * 2.1f).toInt())
-    }
-    fun type(text: String) = hid.typeText(text)
-    fun key(usage: Int, modifiers: Int = 0) = hid.key(usage, modifiers)
-    fun consumer(bit: Int) = hid.consumer(bit)
+
+    fun disconnectWda() { touch.disconnectWda(); _wdaMessage.value = "Diputus" }
 }
 
 @HiltViewModel

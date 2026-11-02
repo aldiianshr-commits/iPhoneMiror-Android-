@@ -1,16 +1,17 @@
 package com.aldiianshr.iphonemiror.ui.screens
 
+import android.annotation.SuppressLint
 import android.graphics.SurfaceTexture
+import android.view.MotionEvent
 import android.view.Surface
 import android.view.TextureView
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.awaitEachGesture
-import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -19,7 +20,6 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -28,16 +28,19 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.KeyboardReturn
 import androidx.compose.material.icons.automirrored.outlined.Backspace
+import androidx.compose.material.icons.automirrored.outlined.KeyboardReturn
 import androidx.compose.material.icons.outlined.AspectRatio
 import androidx.compose.material.icons.outlined.Cast
 import androidx.compose.material.icons.outlined.Fullscreen
 import androidx.compose.material.icons.outlined.FullscreenExit
+import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Keyboard
-import androidx.compose.material.icons.outlined.Mouse
+import androidx.compose.material.icons.outlined.MoreHoriz
 import androidx.compose.material.icons.outlined.QueryStats
 import androidx.compose.material.icons.outlined.Stop
+import androidx.compose.material.icons.outlined.TouchApp
+import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material.icons.outlined.ZoomOutMap
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
@@ -57,96 +60,114 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.pointerInteropFilter
+import androidx.compose.ui.layout.layout
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aldiianshr.iphonemiror.connection.ReceiverController
-import com.aldiianshr.iphonemiror.domain.model.InputMode
 import com.aldiianshr.iphonemiror.domain.model.ReceiverStatus
-import com.aldiianshr.iphonemiror.input.BluetoothHidController
 import com.aldiianshr.iphonemiror.input.HidReports
 import com.aldiianshr.iphonemiror.input.KeyMap
+import com.aldiianshr.iphonemiror.input.touch.FeedbackStatus
+import com.aldiianshr.iphonemiror.input.touch.NPoint
+import com.aldiianshr.iphonemiror.input.touch.Rect
+import com.aldiianshr.iphonemiror.input.touch.ScaleMode
+import com.aldiianshr.iphonemiror.input.touch.TouchEvent
+import com.aldiianshr.iphonemiror.input.touch.TouchMapper
 import com.aldiianshr.iphonemiror.ui.components.Chip
 import com.aldiianshr.iphonemiror.ui.components.color
 import com.aldiianshr.iphonemiror.ui.components.formatDuration
 import com.aldiianshr.iphonemiror.ui.components.label
 import com.aldiianshr.iphonemiror.ui.theme.Mono
 import com.aldiianshr.iphonemiror.ui.theme.Palette
-import com.aldiianshr.iphonemiror.ui.viewmodel.InputViewModel
 import com.aldiianshr.iphonemiror.ui.viewmodel.ReceiverViewModel
+import com.aldiianshr.iphonemiror.ui.viewmodel.TouchViewModel
 import kotlinx.coroutines.delay
 
-private enum class AspectMode(val label: String) { FIT("Pas"), FILL("Penuh"), STRETCH("Regang") }
+private enum class DisplayMode(val label: String) { VIEW_ONLY("View Only"), TOUCH("Touch Mode") }
+
+fun FeedbackStatus.color(): Color = when (this) {
+    FeedbackStatus.CONFIRMED, FeedbackStatus.SCREEN_RESPONSE -> Palette.Ok
+    FeedbackStatus.SENT, FeedbackStatus.SENDING -> Palette.Info
+    FeedbackStatus.NO_SCREEN_CHANGE -> Palette.Warn
+    FeedbackStatus.UNSUPPORTED, FeedbackStatus.FAILED -> Palette.Bad
+}
 
 @Composable
 fun MirroringScreen(vm: ReceiverViewModel, fullscreen: Boolean, onFullscreen: (Boolean) -> Unit) {
-    val input: InputViewModel = hiltViewModel()
+    val touchVm: TouchViewModel = hiltViewModel()
     val state by vm.state.collectAsStateWithLifecycle()
     val stats by vm.stats.collectAsStateWithLifecycle()
     val quality by vm.quality.collectAsStateWithLifecycle()
-    val hid by input.hidState.collectAsStateWithLifecycle()
-    val settings by input.settings.collectAsStateWithLifecycle()
+    val touch by touchVm.state.collectAsStateWithLifecycle()
+    val livePoints by touchVm.livePoints.collectAsStateWithLifecycle()
+    val settings by touchVm.settings.collectAsStateWithLifecycle()
 
-    var aspect by rememberSaveable { mutableStateOf(AspectMode.FIT) }
+    var mode by rememberSaveable { mutableStateOf(DisplayMode.TOUCH) }
+    var scaleMode by rememberSaveable { mutableStateOf(ScaleMode.ASPECT) }
     var showStats by rememberSaveable { mutableStateOf(false) }
-    var controlEnabled by rememberSaveable { mutableStateOf(true) }
     var showKeyboard by rememberSaveable { mutableStateOf(false) }
     var chromeVisible by remember { mutableStateOf(true) }
-    var scale by remember { mutableFloatStateOf(1f) }
-    var offset by remember { mutableStateOf(Offset.Zero) }
+    var zoom by remember { mutableFloatStateOf(1f) }
+    var pan by remember { mutableStateOf(Offset.Zero) }
 
     val streaming = state.status == ReceiverStatus.MIRRORING && stats.hasVideo
     val selfTest = state.device?.model == ReceiverController.SELF_TEST_MODEL
-    val canControl = hid.link == BluetoothHidController.Link.CONNECTED && controlEnabled
+    val touchActive = mode == DisplayMode.TOUCH && streaming
 
     LaunchedEffect(fullscreen, chromeVisible) {
         if (fullscreen && chromeVisible) { delay(3_500); chromeVisible = false }
     }
 
     Box(Modifier.fillMaxSize().background(Color.Black).testTag("mirroring_root")) {
-        BoxWithConstraints(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            val videoAspect = if (stats.width > 0 && stats.height > 0) stats.width.toFloat() / stats.height else 9f / 19.5f
-            val containerAspect = maxWidth.value / maxHeight.value
-            val videoModifier = when (aspect) {
-                AspectMode.FIT -> Modifier.aspectRatio(videoAspect, matchHeightConstraintsFirst = videoAspect < containerAspect)
-                AspectMode.STRETCH -> Modifier.fillMaxSize()
-                AspectMode.FILL -> Modifier.aspectRatio(videoAspect, matchHeightConstraintsFirst = videoAspect >= containerAspect)
-            }
-            Box(
-                videoModifier
-                    .graphicsLayer {
-                        scaleX = scale; scaleY = scale
-                        translationX = offset.x; translationY = offset.y
+        BoxWithConstraints(Modifier.fillMaxSize().clipToBounds()) {
+            val density = LocalDensity.current
+            val cw = with(density) { maxWidth.toPx() }
+            val ch = with(density) { maxHeight.toPx() }
+            val vw = if (stats.width > 0) stats.width else 1179
+            val vh = if (stats.height > 0) stats.height else 2556
+            val content = TouchMapper.contentRect(cw, ch, vw, vh, scaleMode)
+            val displayed = TouchMapper.displayedRect(content, zoom, pan.x, pan.y)
+
+            // Video placed with exactly the rect the touch mapper uses.
+            Box(Modifier.placeAt(displayed)) { VideoSurface(vm, Modifier.fillMaxSize()) }
+
+            if (touchActive) {
+                TouchInputLayer(displayed, touchVm::onTouch, Modifier.fillMaxSize()) { chromeVisible = true }
+            } else {
+                Box(
+                    Modifier.fillMaxSize().pointerInput(Unit) {
+                        detectTransformGestures { _, p, z, _ ->
+                            zoom = (zoom * z).coerceIn(1f, 5f)
+                            pan = if (zoom == 1f) Offset.Zero else pan + p
+                        }
+                    }.pointerInput(Unit) {
+                        detectTapGestures(
+                            onTap = { chromeVisible = !chromeVisible },
+                            onDoubleTap = { zoom = if (zoom > 1f) 1f else 2f; pan = Offset.Zero },
+                        )
                     },
-            ) {
-                VideoSurface(vm, Modifier.fillMaxSize())
-                if (canControl && streaming) {
-                    ControlOverlay(input, settings.inputMode, Modifier.fillMaxSize()) { chromeVisible = true }
-                } else {
-                    Box(
-                        Modifier.fillMaxSize().pointerInput(Unit) {
-                            detectTransformGestures { _, pan, zoom, _ ->
-                                scale = (scale * zoom).coerceIn(1f, 5f)
-                                offset = if (scale == 1f) Offset.Zero else offset + pan
-                            }
-                        }.pointerInput(Unit) {
-                            detectTapGestures(
-                                onTap = { chromeVisible = !chromeVisible },
-                                onDoubleTap = { scale = if (scale > 1f) 1f else 2f; offset = Offset.Zero },
-                            )
-                        },
-                    )
-                }
+                )
+            }
+
+            if (settings.showTouchIndicators && streaming) {
+                TouchIndicators(displayed, livePoints, touch.lastFeedback?.takeIf { System.currentTimeMillis() - it.timeMs < 1_500 })
             }
         }
 
@@ -156,7 +177,7 @@ fun MirroringScreen(vm: ReceiverViewModel, fullscreen: Boolean, onFullscreen: (B
             Text(
                 "SELF-TEST — bukan iPhone (uji jalur penerima lokal)",
                 style = MaterialTheme.typography.labelLarge, color = Palette.OnAccent,
-                modifier = Modifier.align(Alignment.BottomCenter).padding(16.dp)
+                modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 64.dp)
                     .clip(RoundedCornerShape(8.dp)).background(Palette.Warn).padding(horizontal = 12.dp, vertical = 6.dp),
             )
         }
@@ -167,21 +188,22 @@ fun MirroringScreen(vm: ReceiverViewModel, fullscreen: Boolean, onFullscreen: (B
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column(Modifier.weight(1f)) {
-                    Text(state.device?.displayName ?: "Mirroring", style = MaterialTheme.typography.titleMedium, color = Palette.Text)
+                    Text(state.device?.displayName ?: "Mirroring", style = MaterialTheme.typography.titleMedium, color = Palette.Text, maxLines = 1)
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.padding(top = 4.dp)) {
                         Chip(state.status.label(), state.status.color())
                         if (stats.hasVideo) Chip("${stats.width}×${stats.height} · %.0f fps".format(stats.fps), Palette.TextSecondary)
                         Chip("Koneksi: ${quality.label}", quality.color())
-                        if (hid.link == BluetoothHidController.Link.CONNECTED) Chip("Kontrol BT", if (controlEnabled) Palette.Ok else Palette.TextTertiary)
                     }
                 }
+                ModeToggle(mode) { mode = it; if (it == DisplayMode.TOUCH) { zoom = 1f; pan = Offset.Zero } }
+                Spacer(Modifier.width(8.dp))
                 ToolButton(if (fullscreen) Icons.Outlined.FullscreenExit else Icons.Outlined.Fullscreen, "Layar penuh", "btn_fullscreen") { onFullscreen(!fullscreen) }
-                ToolButton(Icons.Outlined.AspectRatio, "Rasio: ${aspect.label}") { aspect = AspectMode.entries[(aspect.ordinal + 1) % AspectMode.entries.size] }
-                ToolButton(Icons.Outlined.ZoomOutMap, "Reset zoom") { scale = 1f; offset = Offset.Zero }
-                if (hid.link == BluetoothHidController.Link.CONNECTED) {
-                    ToolButton(Icons.Outlined.Mouse, if (controlEnabled) "Kontrol aktif" else "Kontrol mati", active = controlEnabled) { controlEnabled = !controlEnabled }
-                    ToolButton(Icons.Outlined.Keyboard, "Keyboard", active = showKeyboard) { showKeyboard = !showKeyboard }
+                ToolButton(Icons.Outlined.AspectRatio, "Skala: ${scaleMode.label}", "btn_scale") {
+                    scaleMode = ScaleMode.entries[(scaleMode.ordinal + 1) % ScaleMode.entries.size]
                 }
+                ToolButton(Icons.Outlined.ZoomOutMap, "Reset zoom") { zoom = 1f; pan = Offset.Zero }
+                ToolButton(Icons.Outlined.Home, "Home iPhone") { touchVm.home() }
+                ToolButton(Icons.Outlined.Keyboard, "Keyboard", active = showKeyboard) { showKeyboard = !showKeyboard }
                 ToolButton(Icons.Outlined.QueryStats, "Statistik", active = showStats) { showStats = !showStats }
                 Spacer(Modifier.width(6.dp))
                 TextButton(
@@ -190,34 +212,197 @@ fun MirroringScreen(vm: ReceiverViewModel, fullscreen: Boolean, onFullscreen: (B
                 ) {
                     Icon(Icons.Outlined.Stop, null, tint = Palette.Bad)
                     Spacer(Modifier.width(6.dp))
-                    Text("Stop Mirroring", color = Palette.Bad)
+                    Text("Stop", color = Palette.Bad)
                 }
             }
         }
 
-        if (showStats) {
-            Column(
-                Modifier.align(Alignment.BottomStart).padding(16.dp)
-                    .clip(RoundedCornerShape(12.dp)).background(Color(0xE0141416))
-                    .border(1.dp, Palette.Outline, RoundedCornerShape(12.dp)).padding(12.dp),
-            ) {
-                val lines = listOf(
-                    "resolusi   ${if (stats.hasVideo) "${stats.width}x${stats.height}" else "-"}",
-                    "fps        %.1f".format(stats.fps),
-                    "bitrate    ${stats.bitrateKbps} kbps",
-                    "frame      ${stats.framesDecoded} dekode / ${stats.framesReceived} diterima",
-                    "galat      ${stats.decodeErrors}",
-                    "decoder    ${stats.decoderName ?: "-"}${if (stats.lowLatency) " (low-latency)" else ""}",
-                    "audio      ${stats.audioCodec ?: "-"}${if (stats.audioActive) " aktif" else ""}",
-                    "frame akhir ${if (stats.lastFrameAgeMs >= 0) "${stats.lastFrameAgeMs} ms lalu" else "-"}",
-                    "durasi     ${state.sessionStartedAt?.let { formatDuration(System.currentTimeMillis() - it) } ?: "-"}",
-                )
-                lines.forEach { Text(it, style = Mono, color = Palette.Text) }
-            }
+        // Fullscreen Touch: all touches go to the iPhone, so keep one small handle for the tools.
+        if (fullscreen && !chromeVisible) {
+            FilledTonalIconButton(
+                onClick = { chromeVisible = true },
+                modifier = Modifier.align(Alignment.TopEnd).padding(12.dp).size(40.dp),
+                colors = IconButtonDefaults.filledTonalIconButtonColors(containerColor = Color(0x99141416), contentColor = Palette.Text),
+            ) { Icon(Icons.Outlined.MoreHoriz, "Tampilkan kontrol") }
         }
 
-        if (showKeyboard && canControl) {
-            KeyboardPanel(input, Modifier.align(Alignment.BottomCenter).padding(16.dp))
+        TouchStatusBar(
+            mode = mode,
+            touch = touch,
+            modifier = Modifier.align(Alignment.BottomStart).padding(12.dp),
+        )
+
+        if (showStats) {
+            StatsPanel(stats, state.sessionStartedAt, touch, Modifier.align(Alignment.BottomEnd).padding(12.dp))
+        }
+
+        if (showKeyboard) {
+            KeyboardPanel(touchVm, Modifier.align(Alignment.BottomCenter).padding(bottom = 60.dp, start = 16.dp, end = 16.dp))
+        }
+    }
+}
+
+/** Places a child at an arbitrary rect (may exceed the parent, e.g. FILL/zoom), in px. */
+private fun Modifier.placeAt(r: Rect): Modifier = layout { measurable, constraints ->
+    val w = r.width.toInt().coerceAtLeast(1)
+    val h = r.height.toInt().coerceAtLeast(1)
+    val placeable = measurable.measure(Constraints.fixed(w, h))
+    layout(constraints.maxWidth, constraints.maxHeight) { placeable.place(r.left.toInt(), r.top.toInt()) }
+}
+
+/**
+ * Raw Android MotionEvent handling (all pointers) → mapped iPhone coordinates. Pointers
+ * that start outside the mirrored picture (letterbox bars) are ignored; pointers that
+ * started inside are clamped to the edge if they slide out, like a finger leaving a screen.
+ */
+@OptIn(ExperimentalComposeUiApi::class)
+@SuppressLint("ClickableViewAccessibility")
+@Composable
+private fun TouchInputLayer(displayed: Rect, onTouch: (TouchEvent) -> Unit, modifier: Modifier, onActivity: () -> Unit) {
+    val rect by rememberUpdatedState(displayed)
+    val accepted = remember { HashSet<Int>() }
+    Box(
+        modifier.testTag("touch_layer").pointerInteropFilter { ev ->
+            val t = ev.eventTime
+            when (ev.actionMasked) {
+                MotionEvent.ACTION_DOWN, MotionEvent.ACTION_POINTER_DOWN -> {
+                    val i = ev.actionIndex
+                    val p = TouchMapper.toPhone(ev.getX(i), ev.getY(i), rect)
+                    if (ev.actionMasked == MotionEvent.ACTION_DOWN) { accepted.clear(); onActivity() }
+                    if (p != null) {
+                        val id = ev.getPointerId(i)
+                        accepted += id
+                        onTouch(TouchEvent.Down(id, p, t))
+                    }
+                }
+                MotionEvent.ACTION_MOVE -> {
+                    val pts = HashMap<Int, NPoint>()
+                    for (i in 0 until ev.pointerCount) {
+                        val id = ev.getPointerId(i)
+                        if (id in accepted) TouchMapper.toPhone(ev.getX(i), ev.getY(i), rect, clamp = true)?.let { pts[id] = it }
+                    }
+                    if (pts.isNotEmpty()) onTouch(TouchEvent.Move(pts, t))
+                }
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_POINTER_UP -> {
+                    val i = ev.actionIndex
+                    val id = ev.getPointerId(i)
+                    if (accepted.remove(id)) {
+                        TouchMapper.toPhone(ev.getX(i), ev.getY(i), rect, clamp = true)?.let { onTouch(TouchEvent.Up(id, it, t)) }
+                    }
+                }
+                MotionEvent.ACTION_CANCEL -> {
+                    if (accepted.isNotEmpty()) onTouch(TouchEvent.Cancel(t))
+                    accepted.clear()
+                }
+            }
+            true
+        },
+    )
+}
+
+/** Local feedback only: where the finger is, and the status of the last forwarded gesture. */
+@Composable
+private fun TouchIndicators(displayed: Rect, live: Map<Int, NPoint>, last: com.aldiianshr.iphonemiror.input.touch.TouchFeedback?) {
+    Canvas(Modifier.fillMaxSize()) {
+        for (p in live.values) {
+            val (x, y) = TouchMapper.toView(p, displayed)
+            drawCircle(Color(0x55FFFFFF), radius = 34f, center = Offset(x, y))
+            drawCircle(Color.White, radius = 34f, center = Offset(x, y), style = Stroke(width = 3f))
+        }
+        if (live.isEmpty() && last != null) {
+            for (p in last.points) {
+                val (x, y) = TouchMapper.toView(p, displayed)
+                drawCircle(last.status.color(), radius = 40f, center = Offset(x, y), style = Stroke(width = 5f))
+            }
+        }
+    }
+}
+
+@Composable
+private fun TouchStatusBar(mode: DisplayMode, touch: com.aldiianshr.iphonemiror.input.touch.TouchControlState, modifier: Modifier) {
+    Column(
+        modifier.widthIn(max = 560.dp)
+            .clip(RoundedCornerShape(12.dp)).background(Color(0xD9141416))
+            .border(1.dp, Palette.Outline, RoundedCornerShape(12.dp)).padding(horizontal = 12.dp, vertical = 8.dp)
+            .testTag("touch_status"),
+        verticalArrangement = Arrangement.spacedBy(3.dp),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(if (mode == DisplayMode.TOUCH) Icons.Outlined.TouchApp else Icons.Outlined.Visibility, null,
+                tint = Palette.TextSecondary, modifier = Modifier.size(16.dp))
+            Spacer(Modifier.width(8.dp))
+            val (text, color) = when {
+                mode == DisplayMode.VIEW_ONLY -> "View Only — sentuhan tidak diteruskan" to Palette.TextSecondary
+                touch.activeBackend != null -> "Touch Control: ${touch.activeBackend!!.label}" to Palette.Ok
+                else -> "Touch Control: Unsupported" to Palette.Bad
+            }
+            Text(text, style = MaterialTheme.typography.labelLarge, color = color)
+            touch.averageResponseMs?.let {
+                Spacer(Modifier.width(10.dp))
+                Text("respon rata-rata $it ms", style = MaterialTheme.typography.labelMedium, color = Palette.TextSecondary)
+            }
+            touch.connectionLatencyMs?.let {
+                Spacer(Modifier.width(10.dp))
+                Text("latensi WDA $it ms", style = MaterialTheme.typography.labelMedium, color = Palette.TextSecondary)
+            }
+        }
+        if (mode == DisplayMode.TOUCH && touch.activeBackend == null) {
+            Text(touch.unsupportedReason ?: "", style = MaterialTheme.typography.bodySmall, color = Palette.TextSecondary, maxLines = 3, overflow = TextOverflow.Ellipsis)
+        }
+        touch.lastFeedback?.let { f ->
+            Text(
+                listOfNotNull(f.kind?.label, f.status.label, f.message).joinToString(" · "),
+                style = MaterialTheme.typography.bodySmall, color = f.status.color(), maxLines = 2, overflow = TextOverflow.Ellipsis,
+            )
+        }
+    }
+}
+
+@Composable
+private fun StatsPanel(
+    stats: com.aldiianshr.iphonemiror.domain.model.StreamStats,
+    startedAt: Long?,
+    touch: com.aldiianshr.iphonemiror.input.touch.TouchControlState,
+    modifier: Modifier,
+) {
+    Column(
+        modifier.clip(RoundedCornerShape(12.dp)).background(Color(0xE0141416))
+            .border(1.dp, Palette.Outline, RoundedCornerShape(12.dp)).padding(12.dp),
+    ) {
+        listOf(
+            "resolusi    ${if (stats.hasVideo) "${stats.width}x${stats.height}" else "-"}",
+            "fps         %.1f".format(stats.fps),
+            "bitrate     ${stats.bitrateKbps} kbps",
+            "frame       ${stats.framesDecoded}/${stats.framesReceived}",
+            "galat       ${stats.decodeErrors}",
+            "decoder     ${stats.decoderName ?: "-"}${if (stats.lowLatency) " (LL)" else ""}",
+            "audio       ${stats.audioCodec ?: "-"}",
+            "frame akhir ${if (stats.lastFrameAgeMs >= 0) "${stats.lastFrameAgeMs} ms" else "-"}",
+            "durasi      ${startedAt?.let { formatDuration(System.currentTimeMillis() - it) } ?: "-"}",
+            "input       ${touch.activeBackend?.label ?: "unsupported"}",
+            "gesture     ${touch.gesturesSent} dikirim",
+            "respon      ${touch.averageResponseMs?.let { "$it ms" } ?: "-"}",
+        ).forEach { Text(it, style = Mono, color = Palette.Text) }
+    }
+}
+
+@Composable
+private fun ModeToggle(mode: DisplayMode, onChange: (DisplayMode) -> Unit) {
+    Row(
+        Modifier.clip(RoundedCornerShape(12.dp)).background(Palette.SurfaceHigher).padding(3.dp),
+    ) {
+        DisplayMode.entries.forEach { m ->
+            val sel = m == mode
+            Text(
+                m.label,
+                style = MaterialTheme.typography.labelMedium,
+                color = if (sel) Palette.OnAccent else Palette.Text,
+                modifier = Modifier.clip(RoundedCornerShape(9.dp))
+                    .background(if (sel) Palette.Accent else Color.Transparent)
+                    .clickable { onChange(m) }
+                    .testTag("mode_${m.name}")
+                    .padding(horizontal = 12.dp, vertical = 8.dp),
+            )
         }
     }
 }
@@ -295,61 +480,11 @@ private fun WaitingOverlay(status: ReceiverStatus, receiverName: String, device:
     }
 }
 
-/**
- * Touch → Bluetooth HID mouse. Trackpad mode: drag moves the pointer, tap = click, two-finger
- * drag = scroll, two-finger tap = secondary click, hold-then-drag = drag. Direct mode taps at
- * the touched position (experimental, depends on calibration).
- */
 @Composable
-private fun ControlOverlay(input: InputViewModel, mode: InputMode, modifier: Modifier, onActivity: () -> Unit) {
-    Box(
-        modifier.pointerInput(mode) {
-            awaitEachGesture {
-                val down = awaitFirstDown()
-                onActivity()
-                var moved = false
-                var maxPointers = 1
-                var dragging = false
-                var lastTwoY: Float? = null
-                val slop = viewConfiguration.touchSlop
-                do {
-                    val event = awaitPointerEvent()
-                    val pressed = event.changes.filter { it.pressed }
-                    maxPointers = maxOf(maxPointers, pressed.size)
-                    if (pressed.size >= 2) {
-                        val y = pressed.map { it.position.y }.average().toFloat()
-                        lastTwoY?.let { prev -> val dy = y - prev; if (kotlin.math.abs(dy) > 0.5f) { input.scroll(-dy / 12f); moved = true } }
-                        lastTwoY = y
-                    } else if (pressed.size == 1 && mode == InputMode.TRACKPAD) {
-                        val c = pressed[0]
-                        if (!moved && (c.position - down.position).getDistance() > slop) {
-                            moved = true
-                            if (c.uptimeMillis - down.uptimeMillis > 450) { dragging = true; input.press() }
-                        }
-                        if (moved) {
-                            val d = c.position - c.previousPosition
-                            input.move(d.x * 0.6f, d.y * 0.6f)
-                        }
-                    }
-                    event.changes.forEach { it.consume() }
-                } while (event.changes.any { it.pressed })
-                when {
-                    dragging -> input.release()
-                    moved -> Unit
-                    maxPointers >= 2 -> input.rightClick()
-                    mode == InputMode.DIRECT -> input.tapAt(down.position.x / size.width, down.position.y / size.height)
-                    else -> input.click()
-                }
-            }
-        },
-    )
-}
-
-@Composable
-private fun KeyboardPanel(input: InputViewModel, modifier: Modifier) {
+private fun KeyboardPanel(input: TouchViewModel, modifier: Modifier) {
     var text by remember { mutableStateOf("") }
     Column(
-        modifier.widthIn(max = 760.dp).fillMaxWidth()
+        modifier.widthIn(max = 800.dp).fillMaxWidth()
             .clip(RoundedCornerShape(16.dp)).background(Color(0xF0141416))
             .border(1.dp, Palette.Outline, RoundedCornerShape(16.dp)).padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -371,7 +506,6 @@ private fun KeyboardPanel(input: InputViewModel, modifier: Modifier) {
             KeyChip("↓") { input.key(KeyMap.DOWN) }
             KeyChip("→") { input.key(KeyMap.RIGHT) }
             KeyChip("⌘ Space") { input.key(KeyMap.SPACE, HidReports.MOD_LGUI) }
-            KeyChip("⌘ H") { input.key(KeyMap.KEY_H, HidReports.MOD_LGUI) }
             KeyChip("Vol −") { input.consumer(HidReports.CONSUMER_VOLUME_DOWN) }
             KeyChip("Vol +") { input.consumer(HidReports.CONSUMER_VOLUME_UP) }
             KeyChip("⏯") { input.consumer(HidReports.CONSUMER_PLAY_PAUSE) }

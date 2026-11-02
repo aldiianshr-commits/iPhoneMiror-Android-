@@ -40,7 +40,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aldiianshr.iphonemiror.core.AppLog
-import com.aldiianshr.iphonemiror.domain.model.InputMode
 import com.aldiianshr.iphonemiror.domain.model.StreamResolution
 import com.aldiianshr.iphonemiror.ui.components.InfoNote
 import com.aldiianshr.iphonemiror.ui.components.Panel
@@ -100,18 +99,17 @@ fun SettingsScreen(receiverVm: ReceiverViewModel) {
                 }
             },
             right = {
-                Panel(Modifier.fillMaxWidth(), title = "Kontrol (Bluetooth HID)") {
-                    Label("Mode sentuh")
-                    ChoiceRow(InputMode.entries.map { it.label }, InputMode.entries.indexOf(s.inputMode)) { i ->
-                        vm.update { it.copy(inputMode = InputMode.entries[i]) }
-                    }
+                Panel(Modifier.fillMaxWidth(), title = "Kontrol sentuh") {
+                    Text(
+                        "Jalur input, format pointer HID, pemetaan orientasi dan WebDriverAgent diatur di halaman Kontrol Sentuh.",
+                        style = MaterialTheme.typography.bodySmall, color = Palette.TextSecondary,
+                    )
                     Spacer(Modifier.size(10.dp))
-                    Label("Kecepatan pointer: %.2f×".format(s.pointerSpeed))
+                    Label("Kecepatan pointer mode relatif: %.2f×".format(s.pointerSpeed))
                     Slider(
                         value = s.pointerSpeed, onValueChange = { v -> vm.update { it.copy(pointerSpeed = v) } },
                         valueRange = 0.3f..3f,
                     )
-                    InfoNote("Mode sentuh langsung memindahkan pointer ke pojok lalu ke posisi sentuhan. iOS memakai akselerasi pointer, jadi ketepatannya bergantung pada kecepatan pointer ini dan 'Kecepatan Pelacakan' AssistiveTouch.")
                 }
                 Panel(Modifier.fillMaxWidth(), title = "Uji mandiri penerima", subtitle = "Verifikasi jalur Wi-Fi → dekripsi → decoder tanpa iPhone") {
                     Text(

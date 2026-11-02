@@ -76,6 +76,11 @@ class VideoDecoderEngine(
     private var windowStart = System.nanoTime()
     @Volatile private var lastFrameAt = 0L
 
+    /** System.nanoTime() of the most recently decoded frame (0 = none). Used to detect the
+     *  iPhone's screen responding to forwarded touch input. */
+    @Volatile var lastDecodedNanos: Long = 0L
+        private set
+
     private val thread = Thread(::loop, "h264-decoder").apply { isDaemon = true; priority = Thread.MAX_PRIORITY }
 
     init { thread.start() }
@@ -253,6 +258,7 @@ class VideoDecoderEngine(
                     index == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED -> onOutputFormat(c.outputFormat)
                     index >= 0 -> {
                         c.releaseOutputBuffer(index, renderEnabled)
+                        lastDecodedNanos = System.nanoTime()
                         framesDecoded++
                         windowFrames++
                     }

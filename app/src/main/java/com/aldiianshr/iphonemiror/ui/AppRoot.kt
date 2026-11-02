@@ -31,6 +31,7 @@ import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Link
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.TouchApp
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
@@ -63,6 +64,7 @@ import com.aldiianshr.iphonemiror.ui.screens.HistoryScreen
 import com.aldiianshr.iphonemiror.ui.screens.MirroringScreen
 import com.aldiianshr.iphonemiror.ui.screens.SettingsScreen
 import com.aldiianshr.iphonemiror.ui.screens.StatusPanel
+import com.aldiianshr.iphonemiror.ui.screens.TouchControlScreen
 import com.aldiianshr.iphonemiror.ui.theme.Palette
 import com.aldiianshr.iphonemiror.ui.viewmodel.ReceiverViewModel
 
@@ -71,6 +73,7 @@ enum class AppScreen(val title: String, val icon: ImageVector) {
     CONNECT("Hubungkan iPhone", Icons.Outlined.Link),
     DEVICES("Device Manager", Icons.Outlined.Devices),
     MIRRORING("Mirroring", Icons.Outlined.Cast),
+    TOUCH("Kontrol Sentuh", Icons.Outlined.TouchApp),
     HISTORY("Riwayat Koneksi", Icons.Outlined.History),
     ACCOUNT("Akun Apple", Icons.Outlined.AccountCircle),
     SETTINGS("Pengaturan", Icons.Outlined.Settings),
@@ -97,6 +100,7 @@ fun AppRoot(
                     AppScreen.CONNECT -> ConnectScreen(receiverVm, onNavigate)
                     AppScreen.DEVICES -> DeviceManagerScreen(receiverVm)
                     AppScreen.MIRRORING -> MirroringScreen(receiverVm, fullscreen, onFullscreen)
+                    AppScreen.TOUCH -> TouchControlScreen(receiverVm, onNavigate)
                     AppScreen.HISTORY -> HistoryScreen()
                     AppScreen.ACCOUNT -> AppleAccountScreen(receiverVm)
                     AppScreen.SETTINGS -> SettingsScreen(receiverVm)

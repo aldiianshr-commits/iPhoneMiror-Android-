@@ -12,12 +12,13 @@ import android.content.Context
 import android.content.pm.PackageManager
 import androidx.core.content.ContextCompat
 import com.aldiianshr.iphonemiror.core.AppLog
+import com.aldiianshr.iphonemiror.input.touch.HidCommand
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import java.util.concurrent.Executors
-import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.LinkedBlockingDeque
 import java.util.concurrent.TimeUnit
 
 /**
@@ -43,6 +44,7 @@ class BluetoothHidController(private val context: Context) {
         val link: Link = Link.DISCONNECTED,
         val bondedHosts: List<Pair<String, String>> = emptyList(),
         val error: String? = null,
+        val absolutePointer: Boolean = true,
     ) {
         val canSend: Boolean get() = link == Link.CONNECTED
     }
@@ -55,16 +57,20 @@ class BluetoothHidController(private val context: Context) {
     val state: StateFlow<State> = _state.asStateFlow()
 
     private sealed interface Out {
-        class Report(val id: Int, val data: ByteArray) : Out
+        class Report(val id: Int, val data: ByteArray, val key: String? = null) : Out
         class Delay(val ms: Long) : Out
     }
 
-    private val outQueue = LinkedBlockingQueue<Out>(4096)
-    private val moveLock = Any()
-    private var pendingDx = 0f
-    private var pendingDy = 0f
-    private var pendingWheel = 0f
-    @Volatile private var buttons = 0
+    private val outQueue = LinkedBlockingDeque<Out>(4096)
+    @Volatile var absolutePointer: Boolean = true
+        private set
+    @Volatile var lastSendNanos: Long = 0
+        private set
+    @Volatile var lastSendOk: Boolean = true
+        private set
+    /** Counters for diagnostics (not in [state] to avoid recomposition per report). */
+    val reportsSent = java.util.concurrent.atomic.AtomicLong()
+    val reportsFailed = java.util.concurrent.atomic.AtomicLong()
 
     init {
         Thread(::senderLoop, "hid-sender").apply { isDaemon = true }.start()
@@ -126,7 +132,7 @@ class BluetoothHidController(private val context: Context) {
             "Keyboard & Mouse dari tablet",
             "iPhoneMiror",
             BluetoothHidDevice.SUBCLASS1_COMBO,
-            HidReports.DESCRIPTOR,
+            HidReports.descriptor(absolutePointer),
         )
         val ok = runCatching { h.registerApp(sdp, null, null, callbackExecutor, hidCallback) }.getOrDefault(false)
         if (!ok) _state.update { it.copy(error = "Registrasi HID gagal (mungkin dipakai aplikasi lain)") }
@@ -163,7 +169,7 @@ class BluetoothHidController(private val context: Context) {
         @SuppressLint("MissingPermission")
         override fun onGetReport(device: BluetoothDevice?, type: Byte, id: Byte, bufferSize: Int) {
             val data = when (id.toInt()) {
-                HidReports.ID_MOUSE -> HidReports.mouse(0, 0, 0)
+                HidReports.ID_MOUSE -> if (absolutePointer) HidReports.absMouse(0, 0, 0) else HidReports.mouse(0, 0, 0)
                 HidReports.ID_KEYBOARD -> HidReports.keyboard(0, emptyList())
                 else -> HidReports.consumer(0)
             }
@@ -194,40 +200,41 @@ class BluetoothHidController(private val context: Context) {
         _state.update { it.copy(profileReady = false, registered = false, link = Link.DISCONNECTED, host = null) }
     }
 
-    // ---- Pointer ----
-
-    /** Accumulates relative pointer motion; the sender thread flushes it every few ms. */
-    fun move(dx: Float, dy: Float) = synchronized(moveLock) { pendingDx += dx; pendingDy += dy }
-
-    fun scroll(amount: Float) = synchronized(moveLock) { pendingWheel += amount }
-
-    fun press(button: Int) { buttons = buttons or button; enqueue(Out.Report(HidReports.ID_MOUSE, HidReports.mouse(buttons, 0, 0))) }
-
-    fun release(button: Int) { buttons = buttons and button.inv(); enqueue(Out.Report(HidReports.ID_MOUSE, HidReports.mouse(buttons, 0, 0))) }
-
-    fun click(button: Int = HidReports.BUTTON_LEFT) {
-        press(button); enqueue(Out.Delay(30)); release(button)
-    }
-
     /**
-     * Experimental absolute tap: pins the pointer to the top-left corner, then moves by a
-     * calibrated amount. iOS applies pointer acceleration, so accuracy depends on the
-     * AssistiveTouch tracking speed and the calibration value.
+     * Switches between the absolute (iOS 18+) and relative pointer descriptor. The SDP record
+     * is re-registered; iOS caches the descriptor, so the iPhone must forget and re-pair the
+     * tablet after a change.
      */
-    fun tapAt(u: Float, v: Float, countsAcross: Int, countsDown: Int) {
-        repeat(40) { enqueue(Out.Report(HidReports.ID_MOUSE, HidReports.mouse(0, -127, -127))); enqueue(Out.Delay(4)) }
-        enqueue(Out.Delay(60))
-        val tx = (u.coerceIn(0f, 1f) * countsAcross).toInt()
-        val ty = (v.coerceIn(0f, 1f) * countsDown).toInt()
-        for ((sx, sy) in HidReports.splitMovement(tx, ty, maxStep = 6)) {
-            enqueue(Out.Report(HidReports.ID_MOUSE, HidReports.mouse(0, sx, sy)))
-            enqueue(Out.Delay(6))
+    @SuppressLint("MissingPermission")
+    fun setPointerMode(absolute: Boolean) {
+        if (absolute == absolutePointer) return
+        absolutePointer = absolute
+        _state.update { it.copy(absolutePointer = absolute) }
+        val h = hid ?: return
+        if (_state.value.registered) {
+            runCatching { h.unregisterApp() }
+            register()
         }
-        enqueue(Out.Delay(40))
-        click()
     }
 
-    // ---- Keyboard ----
+    // ---- Command stream (from the touch translator) ----
+
+    /** Queues HID commands; a pending report with the same coalesce key is replaced. */
+    fun submit(commands: List<HidCommand>) {
+        if (!_state.value.canSend || commands.isEmpty()) return
+        synchronized(outQueue) {
+            for (c in commands) when (c) {
+                is HidCommand.Delay -> outQueue.offer(Out.Delay(c.ms))
+                is HidCommand.Report -> {
+                    val tail = outQueue.peekLast()
+                    if (c.coalesceKey != null && tail is Out.Report && tail.key == c.coalesceKey) outQueue.pollLast()
+                    outQueue.offer(Out.Report(c.id, c.data, c.coalesceKey))
+                }
+            }
+        }
+    }
+
+    // ---- Keyboard / consumer ----
 
     fun typeText(text: String) {
         for (c in text) {
@@ -237,32 +244,34 @@ class BluetoothHidController(private val context: Context) {
     }
 
     fun key(usage: Int, modifiers: Int = 0) {
-        enqueue(Out.Report(HidReports.ID_KEYBOARD, HidReports.keyboard(modifiers, listOf(usage))))
-        enqueue(Out.Delay(12))
-        enqueue(Out.Report(HidReports.ID_KEYBOARD, HidReports.keyboard(0, emptyList())))
-        enqueue(Out.Delay(12))
+        submit(
+            listOf(
+                HidCommand.Report(HidReports.ID_KEYBOARD, HidReports.keyboard(modifiers, listOf(usage))),
+                HidCommand.Delay(12),
+                HidCommand.Report(HidReports.ID_KEYBOARD, HidReports.keyboard(0, emptyList())),
+                HidCommand.Delay(12),
+            ),
+        )
     }
 
-    fun consumer(bit: Int) {
-        enqueue(Out.Report(HidReports.ID_CONSUMER, HidReports.consumer(bit)))
-        enqueue(Out.Delay(40))
-        enqueue(Out.Report(HidReports.ID_CONSUMER, HidReports.consumer(0)))
+    /** Presses and releases one consumer-page usage (e.g. [HidReports.CONSUMER_HOME]). */
+    fun consumer(usage: Int) {
+        submit(
+            listOf(
+                HidCommand.Report(HidReports.ID_CONSUMER, HidReports.consumer(usage)),
+                HidCommand.Delay(60),
+                HidCommand.Report(HidReports.ID_CONSUMER, HidReports.consumer(0)),
+            ),
+        )
     }
 
-    private fun enqueue(o: Out) {
-        if (!_state.value.canSend) return
-        outQueue.offer(o)
-    }
-
-    @SuppressLint("MissingPermission")
     private fun senderLoop() {
         while (true) {
             try {
-                val item = outQueue.poll(8, TimeUnit.MILLISECONDS)
-                when (item) {
+                when (val item = outQueue.poll(50, TimeUnit.MILLISECONDS)) {
                     is Out.Report -> send(item.id, item.data)
                     is Out.Delay -> Thread.sleep(item.ms)
-                    null -> flushMotion()
+                    null -> Unit
                 }
             } catch (_: InterruptedException) {
                 return
@@ -272,29 +281,20 @@ class BluetoothHidController(private val context: Context) {
         }
     }
 
-    private fun flushMotion() {
-        val (dx, dy, wheel) = synchronized(moveLock) {
-            val x = pendingDx.toInt(); val y = pendingDy.toInt(); val w = pendingWheel.toInt()
-            pendingDx -= x; pendingDy -= y; pendingWheel -= w
-            Triple(x, y, w)
-        }
-        if (dx == 0 && dy == 0 && wheel == 0) return
-        if (!_state.value.canSend) return
-        val steps = HidReports.splitMovement(dx, dy)
-        if (steps.isEmpty()) send(HidReports.ID_MOUSE, HidReports.mouse(buttons, 0, 0, wheel))
-        steps.forEachIndexed { i, (sx, sy) ->
-            send(HidReports.ID_MOUSE, HidReports.mouse(buttons, sx, sy, if (i == 0) wheel else 0))
-        }
-    }
-
     @SuppressLint("MissingPermission")
     private fun send(id: Int, data: ByteArray) {
         val h = hid ?: return
         val target = host ?: return
-        h.sendReport(target, id, data)
+        val ok = runCatching { h.sendReport(target, id, data) }.getOrDefault(false)
+        lastSendOk = ok
+        lastSendNanos = System.nanoTime()
+        if (ok) reportsSent.incrementAndGet() else reportsFailed.incrementAndGet()
+        // Pace reports so iOS sees continuous motion rather than bursts.
+        if (id == HidReports.ID_MOUSE) Thread.sleep(REPORT_INTERVAL_MS)
     }
 
     companion object {
         private const val TAG = "BtHid"
+        const val REPORT_INTERVAL_MS = 8L
     }
 }

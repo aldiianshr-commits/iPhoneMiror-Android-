@@ -11,7 +11,9 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.aldiianshr.iphonemiror.domain.model.AppSettings
-import com.aldiianshr.iphonemiror.domain.model.InputMode
+import com.aldiianshr.iphonemiror.domain.model.HidOrientation
+import com.aldiianshr.iphonemiror.domain.model.HidPointerMode
+import com.aldiianshr.iphonemiror.domain.model.TouchBackendPref
 import com.aldiianshr.iphonemiror.domain.model.StreamResolution
 import com.aldiianshr.iphonemiror.domain.repository.SettingsRepository
 import kotlinx.coroutines.flow.Flow
@@ -30,7 +32,12 @@ class DataStoreSettingsRepository(private val context: Context) : SettingsReposi
         val AUTO_OPEN = booleanPreferencesKey("auto_open")
         val SCREEN_ON = booleanPreferencesKey("keep_screen_on")
         val LOW_LATENCY = booleanPreferencesKey("low_latency")
-        val INPUT_MODE = stringPreferencesKey("input_mode")
+        val TOUCH_BACKEND = stringPreferencesKey("touch_backend")
+        val HID_POINTER = stringPreferencesKey("hid_pointer_mode")
+        val HID_ORIENTATION = stringPreferencesKey("hid_orientation")
+        val INVERT_SCROLL = booleanPreferencesKey("invert_scroll")
+        val WDA_URL = stringPreferencesKey("wda_url")
+        val TOUCH_INDICATORS = booleanPreferencesKey("touch_indicators")
         val POINTER_SPEED = floatPreferencesKey("pointer_speed")
         val DEBUG = booleanPreferencesKey("debug_logging")
     }
@@ -40,39 +47,36 @@ class DataStoreSettingsRepository(private val context: Context) : SettingsReposi
         if (model.isEmpty()) "iPhoneMiror" else "iPhoneMiror ($model)"
     }
 
-    override val settings: Flow<AppSettings> = context.settingsStore.data.map { p ->
+    private fun read(p: Preferences): AppSettings {
         val d = AppSettings()
-        AppSettings(
+        return AppSettings(
             receiverName = p[Keys.NAME] ?: defaultName,
-            resolution = p[Keys.RESOLUTION]?.let { runCatching { StreamResolution.valueOf(it) }.getOrNull() } ?: d.resolution,
+            resolution = p[Keys.RESOLUTION].enumOr(d.resolution),
             maxFps = p[Keys.FPS] ?: d.maxFps,
             audioEnabled = p[Keys.AUDIO] ?: d.audioEnabled,
             requireApproval = p[Keys.APPROVAL] ?: d.requireApproval,
             autoOpenMirroring = p[Keys.AUTO_OPEN] ?: d.autoOpenMirroring,
             keepScreenOn = p[Keys.SCREEN_ON] ?: d.keepScreenOn,
             lowLatencyDecoder = p[Keys.LOW_LATENCY] ?: d.lowLatencyDecoder,
-            inputMode = p[Keys.INPUT_MODE]?.let { runCatching { InputMode.valueOf(it) }.getOrNull() } ?: d.inputMode,
+            touchBackend = p[Keys.TOUCH_BACKEND].enumOr(d.touchBackend),
+            hidPointerMode = p[Keys.HID_POINTER].enumOr(d.hidPointerMode),
+            hidOrientation = p[Keys.HID_ORIENTATION].enumOr(d.hidOrientation),
+            invertScroll = p[Keys.INVERT_SCROLL] ?: d.invertScroll,
+            wdaUrl = p[Keys.WDA_URL] ?: d.wdaUrl,
+            showTouchIndicators = p[Keys.TOUCH_INDICATORS] ?: d.showTouchIndicators,
             pointerSpeed = p[Keys.POINTER_SPEED] ?: d.pointerSpeed,
             debugLogging = p[Keys.DEBUG] ?: d.debugLogging,
         )
     }
 
+    private inline fun <reified E : Enum<E>> String?.enumOr(default: E): E =
+        this?.let { v -> enumValues<E>().firstOrNull { it.name == v } } ?: default
+
+    override val settings: Flow<AppSettings> = context.settingsStore.data.map { read(it) }
+
     override suspend fun update(transform: (AppSettings) -> AppSettings) {
         context.settingsStore.edit { p ->
-            val current = AppSettings(
-                receiverName = p[Keys.NAME] ?: defaultName,
-                resolution = p[Keys.RESOLUTION]?.let { runCatching { StreamResolution.valueOf(it) }.getOrNull() } ?: AppSettings().resolution,
-                maxFps = p[Keys.FPS] ?: AppSettings().maxFps,
-                audioEnabled = p[Keys.AUDIO] ?: AppSettings().audioEnabled,
-                requireApproval = p[Keys.APPROVAL] ?: AppSettings().requireApproval,
-                autoOpenMirroring = p[Keys.AUTO_OPEN] ?: AppSettings().autoOpenMirroring,
-                keepScreenOn = p[Keys.SCREEN_ON] ?: AppSettings().keepScreenOn,
-                lowLatencyDecoder = p[Keys.LOW_LATENCY] ?: AppSettings().lowLatencyDecoder,
-                inputMode = p[Keys.INPUT_MODE]?.let { runCatching { InputMode.valueOf(it) }.getOrNull() } ?: AppSettings().inputMode,
-                pointerSpeed = p[Keys.POINTER_SPEED] ?: AppSettings().pointerSpeed,
-                debugLogging = p[Keys.DEBUG] ?: AppSettings().debugLogging,
-            )
-            val n = transform(current)
+            val n = transform(read(p))
             p[Keys.NAME] = n.receiverName.take(40)
             p[Keys.RESOLUTION] = n.resolution.name
             p[Keys.FPS] = n.maxFps
@@ -81,7 +85,12 @@ class DataStoreSettingsRepository(private val context: Context) : SettingsReposi
             p[Keys.AUTO_OPEN] = n.autoOpenMirroring
             p[Keys.SCREEN_ON] = n.keepScreenOn
             p[Keys.LOW_LATENCY] = n.lowLatencyDecoder
-            p[Keys.INPUT_MODE] = n.inputMode.name
+            p[Keys.TOUCH_BACKEND] = n.touchBackend.name
+            p[Keys.HID_POINTER] = n.hidPointerMode.name
+            p[Keys.HID_ORIENTATION] = n.hidOrientation.name
+            p[Keys.INVERT_SCROLL] = n.invertScroll
+            p[Keys.WDA_URL] = n.wdaUrl.trim()
+            p[Keys.TOUCH_INDICATORS] = n.showTouchIndicators
             p[Keys.POINTER_SPEED] = n.pointerSpeed
             p[Keys.DEBUG] = n.debugLogging
         }

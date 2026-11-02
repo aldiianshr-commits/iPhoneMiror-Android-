@@ -20,4 +20,6 @@ dependencies {
     implementation(project(":domain"))
     implementation(libs.androidx.core.ktx)
     testImplementation(libs.junit)
+    testImplementation(libs.org.json)
+    testImplementation(libs.kotlinx.coroutines.test)
 }

@@ -16,6 +16,7 @@ import com.aldiianshr.iphonemiror.domain.repository.IdentityStore
 import com.aldiianshr.iphonemiror.domain.repository.KnownDeviceRepository
 import com.aldiianshr.iphonemiror.domain.repository.SettingsRepository
 import com.aldiianshr.iphonemiror.input.BluetoothHidController
+import com.aldiianshr.iphonemiror.input.touch.TouchControlManager
 import com.aldiianshr.iphonemiror.mirroring.MirrorEngine
 import dagger.Module
 import dagger.Provides
@@ -70,6 +71,10 @@ object AppModule {
         lowLatency = { holder.current.lowLatencyDecoder },
         audioEnabled = { holder.current.audioEnabled },
     )
+
+    @Provides @Singleton
+    fun touchControl(hid: BluetoothHidController, engine: MirrorEngine) =
+        TouchControlManager(hid) { engine.video.lastDecodedNanos }
 
     @Provides @Singleton
     fun receiverController(

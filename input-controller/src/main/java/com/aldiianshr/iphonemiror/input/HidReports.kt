@@ -1,15 +1,25 @@
 package com.aldiianshr.iphonemiror.input
 
 /**
- * USB HID report descriptor and report encoders for a combined relative mouse,
- * keyboard and consumer-control device. iOS accepts these over Bluetooth HID:
- * keyboards natively, pointing devices once AssistiveTouch is enabled
- * (Settings → Accessibility → Touch → AssistiveTouch).
+ * HID report descriptors and encoders for the tablet acting as a Bluetooth keyboard +
+ * pointer + consumer-control device for an iPhone.
+ *
+ * Pointer modes:
+ * - ABSOLUTE: Generic Desktop X/Y as uint16 in 0..32767 inside a Mouse collection. iOS 18+
+ *   with AssistiveTouch places the pointer at that position of the screen — a click is a
+ *   tap and a held button + motion is a swipe/drag. Layout follows the absolute build of
+ *   jinwon-int/esp32-iphone-agent (MIT), verified there on an iPhone over BLE HID.
+ * - RELATIVE: classic int8 dx/dy mouse (works on older iOS, needs AssistiveTouch too).
+ *
+ * The keyboard collection is declared first: iOS only treats the device as a hardware
+ * keyboard (honouring Shift etc.) when it is (esp32-iphone-agent #17).
  */
 object HidReports {
     const val ID_MOUSE: Int = 1
     const val ID_KEYBOARD: Int = 2
     const val ID_CONSUMER: Int = 3
+
+    const val ABS_MAX = 32767
 
     const val BUTTON_LEFT = 0x01
     const val BUTTON_RIGHT = 0x02
@@ -20,44 +30,75 @@ object HidReports {
     const val MOD_LALT = 0x04
     const val MOD_LGUI = 0x08 // ⌘ Command
 
-    const val CONSUMER_PLAY_PAUSE = 0x0001
-    const val CONSUMER_VOLUME_UP = 0x0002
-    const val CONSUMER_VOLUME_DOWN = 0x0004
-    const val CONSUMER_MUTE = 0x0008
+    // Consumer page usages (16-bit array report).
+    const val CONSUMER_HOME = 0x0040        // "Menu": mapped to Home by Apple's accessory guidelines
+    const val CONSUMER_PLAY_PAUSE = 0x00CD
+    const val CONSUMER_VOLUME_UP = 0x00E9
+    const val CONSUMER_VOLUME_DOWN = 0x00EA
+    const val CONSUMER_MUTE = 0x00E2
+    const val CONSUMER_SEARCH = 0x0221
 
-    val DESCRIPTOR: ByteArray = intArrayOf(
-        // Mouse
-        0x05, 0x01, 0x09, 0x02, 0xA1, 0x01, 0x85, ID_MOUSE,
-        0x09, 0x01, 0xA1, 0x00,
-        0x05, 0x09, 0x19, 0x01, 0x29, 0x03, 0x15, 0x00, 0x25, 0x01, 0x95, 0x03, 0x75, 0x01, 0x81, 0x02,
-        0x95, 0x01, 0x75, 0x05, 0x81, 0x03,
-        0x05, 0x01, 0x09, 0x30, 0x09, 0x31, 0x09, 0x38, 0x15, 0x81, 0x25, 0x7F, 0x75, 0x08, 0x95, 0x03, 0x81, 0x06,
-        0x05, 0x0C, 0x0A, 0x38, 0x02, 0x15, 0x81, 0x25, 0x7F, 0x75, 0x08, 0x95, 0x01, 0x81, 0x06,
-        0xC0, 0xC0,
-        // Keyboard
+    private val KEYBOARD = intArrayOf(
         0x05, 0x01, 0x09, 0x06, 0xA1, 0x01, 0x85, ID_KEYBOARD,
         0x05, 0x07, 0x19, 0xE0, 0x29, 0xE7, 0x15, 0x00, 0x25, 0x01, 0x75, 0x01, 0x95, 0x08, 0x81, 0x02,
-        0x95, 0x01, 0x75, 0x08, 0x81, 0x03,
-        0x95, 0x06, 0x75, 0x08, 0x15, 0x00, 0x25, 0x65, 0x05, 0x07, 0x19, 0x00, 0x29, 0x65, 0x81, 0x00,
+        0x95, 0x01, 0x75, 0x08, 0x81, 0x01,
+        0x95, 0x06, 0x75, 0x08, 0x15, 0x00, 0x26, 0xFF, 0x00, 0x05, 0x07, 0x19, 0x00, 0x2A, 0xFF, 0x00, 0x81, 0x00,
         0xC0,
-        // Consumer control (play/pause, volume)
-        0x05, 0x0C, 0x09, 0x01, 0xA1, 0x01, 0x85, ID_CONSUMER,
-        0x15, 0x00, 0x25, 0x01, 0x75, 0x01, 0x95, 0x04,
-        0x09, 0xCD, 0x09, 0xE9, 0x09, 0xEA, 0x09, 0xE2, 0x81, 0x02,
-        0x95, 0x04, 0x81, 0x03,
-        0xC0,
-    ).map { it.toByte() }.toByteArray()
+    )
 
-    /** Mouse report body (without report id): buttons, dx, dy, wheel, horizontal pan. */
+    private val MOUSE_HEAD = intArrayOf(
+        0x05, 0x01, 0x09, 0x02, 0xA1, 0x01, 0x85, ID_MOUSE, 0x09, 0x01, 0xA1, 0x00,
+        0x05, 0x09, 0x19, 0x01, 0x29, 0x05, 0x15, 0x00, 0x25, 0x01, 0x95, 0x05, 0x75, 0x01, 0x81, 0x02,
+        0x95, 0x01, 0x75, 0x03, 0x81, 0x01,
+    )
+
+    private val MOUSE_ABS_XY = intArrayOf(
+        0x05, 0x01, 0x09, 0x30, 0x09, 0x31, 0x16, 0x00, 0x00, 0x26, 0xFF, 0x7F, 0x75, 0x10, 0x95, 0x02, 0x81, 0x02,
+        0x09, 0x38, 0x15, 0x81, 0x25, 0x7F, 0x75, 0x08, 0x95, 0x01, 0x81, 0x06,
+    )
+
+    private val MOUSE_REL_XY = intArrayOf(
+        0x05, 0x01, 0x09, 0x30, 0x09, 0x31, 0x09, 0x38, 0x15, 0x81, 0x25, 0x7F, 0x75, 0x08, 0x95, 0x03, 0x81, 0x06,
+    )
+
+    private val MOUSE_TAIL = intArrayOf(
+        0x05, 0x0C, 0x0A, 0x38, 0x02, 0x15, 0x81, 0x25, 0x7F, 0x75, 0x08, 0x95, 0x01, 0x81, 0x06,
+        0xC0, 0xC0,
+    )
+
+    private val CONSUMER = intArrayOf(
+        0x05, 0x0C, 0x09, 0x01, 0xA1, 0x01, 0x85, ID_CONSUMER,
+        0x15, 0x00, 0x26, 0xFF, 0x03, 0x19, 0x00, 0x2A, 0xFF, 0x03, 0x75, 0x10, 0x95, 0x01, 0x81, 0x00,
+        0xC0,
+    )
+
+    fun descriptor(absolute: Boolean): ByteArray =
+        (KEYBOARD + MOUSE_HEAD + (if (absolute) MOUSE_ABS_XY else MOUSE_REL_XY) + MOUSE_TAIL + CONSUMER)
+            .map { it.toByte() }.toByteArray()
+
+    /** Relative mouse body: buttons, dx, dy, wheel, pan. */
     fun mouse(buttons: Int, dx: Int, dy: Int, wheel: Int = 0, pan: Int = 0): ByteArray = byteArrayOf(
-        (buttons and 0x07).toByte(),
+        (buttons and 0x1F).toByte(),
         dx.coerceIn(-127, 127).toByte(),
         dy.coerceIn(-127, 127).toByte(),
         wheel.coerceIn(-127, 127).toByte(),
         pan.coerceIn(-127, 127).toByte(),
     )
 
-    /** Keyboard report body: modifiers, reserved, up to 6 key usages. */
+    /** Absolute pointer body: buttons, x (LE uint16), y (LE uint16), wheel, pan. */
+    fun absMouse(buttons: Int, x: Int, y: Int, wheel: Int = 0, pan: Int = 0): ByteArray {
+        val cx = x.coerceIn(0, ABS_MAX)
+        val cy = y.coerceIn(0, ABS_MAX)
+        return byteArrayOf(
+            (buttons and 0x1F).toByte(),
+            (cx and 0xFF).toByte(), (cx shr 8).toByte(),
+            (cy and 0xFF).toByte(), (cy shr 8).toByte(),
+            wheel.coerceIn(-127, 127).toByte(),
+            pan.coerceIn(-127, 127).toByte(),
+        )
+    }
+
+    /** Keyboard body: modifiers, reserved, up to 6 key usages. */
     fun keyboard(modifiers: Int, keys: List<Int>): ByteArray {
         val out = ByteArray(8)
         out[0] = modifiers.toByte()
@@ -65,9 +106,10 @@ object HidReports {
         return out
     }
 
-    fun consumer(bits: Int): ByteArray = byteArrayOf((bits and 0x0F).toByte())
+    /** Consumer body: one 16-bit usage (0 = released). */
+    fun consumer(usage: Int): ByteArray = byteArrayOf((usage and 0xFF).toByte(), ((usage shr 8) and 0x03).toByte())
 
-    /** Splits a large relative movement into HID-sized steps (|d| ≤ 127). */
+    /** Splits a large relative movement into HID-sized steps (|d| ≤ maxStep). */
     fun splitMovement(dx: Int, dy: Int, maxStep: Int = 127): List<Pair<Int, Int>> {
         val steps = maxOf(1, (maxOf(kotlin.math.abs(dx), kotlin.math.abs(dy)) + maxStep - 1) / maxStep)
         val out = ArrayList<Pair<Int, Int>>(steps)

@@ -41,13 +41,14 @@ fun AboutScreen() {
                     Bullet("Layar iPhone via AirPlay Screen Mirroring (Wi-Fi yang sama), H.264 hardware decode.")
                     Bullet("Audio mirroring AAC-ELD.")
                     Bullet("Pairing legacy (Ed25519/Curve25519) + FairPlay SAP v3, stream terenkripsi.")
-                    Bullet("Kontrol balik via Bluetooth HID (keyboard + mouse dengan AssistiveTouch).")
+                    Bullet("Kontrol sentuh langsung: pointer absolut Bluetooth HID (iOS 18+, AssistiveTouch) mengikuti jari real-time.")
+                    Bullet("Multi-touch (pinch, 2+ jari) lewat XCTest/WebDriverAgent bila disiapkan dengan akun developer sendiri.")
                     Bullet("Deteksi iPhone via USB OTG dan Bluetooth LE, riwayat koneksi lokal.")
                 }
                 Panel(Modifier.fillMaxWidth(), title = "Keterbatasan") {
                     Bullet("Mirroring lewat USB atau Bluetooth tidak tersedia.")
                     Bullet("Tidak ada integrasi Apple Account (tidak ada API resmi).")
-                    Bullet("Sentuhan langsung absolut tidak didukung iOS; mode langsung bersifat eksperimental.")
+                    Bullet("AirPlay tidak membawa input; sentuhan butuh Bluetooth HID atau XCTest. Pinch tidak bisa lewat HID (satu pointer).")
                     Bullet("Kompatibilitas iOS 26/27 belum diverifikasi di perangkat nyata — lihat docs/COMPATIBILITY.md.")
                 }
                 Panel(Modifier.fillMaxWidth(), title = "Lisensi pihak ketiga") {
