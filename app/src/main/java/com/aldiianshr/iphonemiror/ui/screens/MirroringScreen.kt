@@ -13,6 +13,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -190,7 +191,7 @@ fun MirroringScreen(vm: ReceiverViewModel, fullscreen: Boolean, onFullscreen: (B
             ) {
                 Column(Modifier.weight(1f)) {
                     Text(state.device?.displayName ?: "Mirroring", style = MaterialTheme.typography.titleMedium, color = Palette.Text, maxLines = 1)
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.padding(top = 4.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.padding(top = 4.dp).horizontalScroll(androidx.compose.foundation.rememberScrollState())) {
                         Chip(state.status.label(), state.status.color())
                         if (stats.hasVideo) Chip("${stats.width}×${stats.height} · %.0f fps".format(stats.fps), Palette.TextSecondary)
                         Chip("Koneksi: ${quality.label}", quality.color())
