@@ -71,6 +71,9 @@ Video digambar dengan rect yang sama persis (`Modifier.placeAt(rect)`), jadi gam
 | Tidak didukung / Gagal | Dengan alasannya (mis. pinch via HID, WDA tidak terjangkau). |
 
 Indikator lingkaran menunjukkan posisi jari (lokal) dan warna status gesture terakhir.
+Di layar Mirroring status ditampilkan sebagai **pil kecil** di kiri bawah (hanya saat streaming):
+ketuk untuk detail, ✕ untuk menyembunyikan; tombol ✋ di toolbar atau halaman Kontrol Sentuh
+untuk menampilkannya lagi. Status gesture hanya muncul ±2,5 detik.
 Statistik menampilkan respon rata-rata (10 gesture terakhir) dan latensi koneksi WDA (ping `/status`).
 
 ## Mode tampilan
@@ -90,7 +93,8 @@ Statistik menampilkan respon rata-rata (10 gesture terakhir) dan latensi koneksi
 **XCTest / WebDriverAgent (untuk pinch & multi-touch):**
 1. Mac dengan Xcode, Apple ID (gratis cukup), *Mode Pengembang* aktif di iPhone.
 2. Build & jalankan target `WebDriverAgentRunner` (repo `appium/WebDriverAgent`) ke iPhone.
-3. Di tablet, *Kontrol Sentuh → URL WebDriverAgent* (otomatis `http://<IP iPhone>:8100` dari koneksi AirPlay) → *Hubungkan*.
+3. Di tablet, *Kontrol Sentuh → URL WebDriverAgent* (otomatis dari koneksi AirPlay, mis.
+   `http://192.168.1.20:8100` atau IPv6 link-local `http://[fe80::…%wlan0]:8100`) → *Hubungkan*.
 4. Sertifikat Apple ID gratis kedaluwarsa tiap 7 hari; ulangi langkah 2.
 
 ## Status pengujian
