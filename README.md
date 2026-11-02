@@ -17,6 +17,8 @@ Diambil otomatis oleh CI pada emulator **Pixel Tablet, Android 14, 2560×1600** 
 | ![](docs/screenshots/02-dashboard-receiver-on.png) | ![](docs/screenshots/03-connect.png) |
 | **Mirroring — self-test** (kartu uji lokal, *bukan* iPhone) | **Pengaturan** |
 | ![](docs/screenshots/10-mirroring-self-test.png) | ![](docs/screenshots/07-settings.png) |
+| **Kontrol Sentuh** (tanpa jalur input → *Unsupported* + alasan) | **Mirroring — Touch Mode** |
+| ![](docs/screenshots/13-touch-control.png) | ![](docs/screenshots/10-mirroring-self-test.png) |
 | **Akun Apple** | **Device Manager** |
 | ![](docs/screenshots/06-apple-account.png) | ![](docs/screenshots/04-device-manager.png) |
 
