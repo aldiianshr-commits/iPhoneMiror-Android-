@@ -177,7 +177,7 @@ fun MirroringScreen(vm: ReceiverViewModel, fullscreen: Boolean, onFullscreen: (B
             Text(
                 "SELF-TEST — bukan iPhone (uji jalur penerima lokal)",
                 style = MaterialTheme.typography.labelLarge, color = Palette.OnAccent,
-                modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 64.dp)
+                modifier = Modifier.align(Alignment.TopCenter).padding(top = 84.dp)
                     .clip(RoundedCornerShape(8.dp)).background(Palette.Warn).padding(horizontal = 12.dp, vertical = 6.dp),
             )
         }
