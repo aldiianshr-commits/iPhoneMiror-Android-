@@ -1,0 +1,157 @@
+name: Android CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build APKs + unit/integration tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Build debug + release, run JVM tests
+        run: |
+          chmod +x gradlew
+          set -o pipefail
+          ./gradlew --continue --stacktrace \
+            assembleDebug assembleRelease \
+            testDebugUnitTest :airplay-protocol:test :domain:test \
+            2>&1 | tee build.log
+
+      - name: Summarise test results
+        if: always()
+        run: python3 .github/scripts/test_summary.py . > test-summary.txt || true
+
+      - name: Upload APKs
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: iPhoneMiror-apks
+          path: |
+            app/build/outputs/apk/debug/iPhoneMiror-debug.apk
+            app/build/outputs/apk/release/iPhoneMiror-release.apk
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-reports
+          path: |
+            **/build/reports/tests/
+            **/build/test-results/
+            test-summary.txt
+            build.log
+
+      - name: Publish results branch (logs, summaries)
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: bash .github/scripts/publish_results.sh ci-build "${{ job.status }}" build.log test-summary.txt
+
+  emulator:
+    name: Emulator tests (integration, UI, memory) + screenshots
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Build test APKs
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug assembleDebugAndroidTest
+
+      - name: Run on tablet emulator (API 34)
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          profile: pixel_tablet
+          disable-animations: true
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          script: bash .github/scripts/emulator_tasks.sh
+
+      - name: Upload emulator results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: emulator-results
+          path: emulator-results/
+
+      - name: Publish results branch (screenshots, reports)
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: bash .github/scripts/publish_results.sh ci-emulator "${{ job.status }}" emulator-results
+
+  release:
+    name: Publish APKs to GitHub Release
+    needs: build
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: iPhoneMiror-apks
+          path: apks
+      - name: Collect files
+        run: |
+          mkdir -p out
+          find apks -name '*.apk' -exec cp {} out/ \;
+          (cd out && sha256sum *.apk > SHA256SUMS.txt)
+          ls -la out
+      - name: Move 'latest-build' tag
+        run: |
+          git tag -f latest-build
+          git push -f origin latest-build
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest-build
+          name: "iPhoneMiror — build ${{ github.run_number }} (${{ github.sha }})"
+          prerelease: true
+          body: |
+            Automated build from commit ${{ github.sha }} (run ${{ github.run_number }}).
+
+            - `iPhoneMiror-release.apk` — minified, signed with the **public test key** (see SECURITY.md).
+            - `iPhoneMiror-debug.apk` — debug build (package `com.aldiianshr.iphonemiror.debug`).
+
+            Target: Xiaomi Pad 6 (Snapdragon 870, Android 13+). Tested in CI on an Android 14 tablet emulator;
+            not yet verified with a physical iPhone — see docs/COMPATIBILITY.md.
+          files: |
+            out/iPhoneMiror-release.apk
+            out/iPhoneMiror-debug.apk
+            out/SHA256SUMS.txt
