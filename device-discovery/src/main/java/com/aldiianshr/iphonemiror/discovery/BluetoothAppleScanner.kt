@@ -63,7 +63,7 @@ class BluetoothAppleScanner(private val context: Context) {
     private fun snapshot(): Status {
         val bonded = if (adapter != null && hasConnectPermission()) {
             runCatching {
-                adapter.bondedDevices.orEmpty().map { (it.name ?: it.address) to describeClass(it) }
+                adapter?.bondedDevices.orEmpty().map { (it.name ?: it.address) to describeClass(it) }
             }.getOrDefault(emptyList())
         } else emptyList()
         return Status(

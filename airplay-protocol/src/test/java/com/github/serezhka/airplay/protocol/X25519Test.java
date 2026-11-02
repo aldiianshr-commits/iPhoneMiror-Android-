@@ -29,7 +29,7 @@ public class X25519Test {
     public void rfc7748ScalarMultVector2() {
         byte[] k = hex("4b66e9d4d1b4673c5ad22691957d6af5c11b6421e0ea01d42ca4169e7918ba0d");
         byte[] u = hex("e5210f12786811d3f4b7959d0538ae2c31dbe7106fc03c3efc4cd549c715a493");
-        assertArrayEquals(hex("95cbde9476e8907d7ade45cb4b873f88b595a68799fa152f6d64ab9a6c45eb15"), X25519.scalarMult(k, u));
+        assertArrayEquals(hex("95cbde9476e8907d7aade45cb4b873f88b595a68799fa152e6f8f7647aac7957"), X25519.scalarMult(k, u));
     }
 
     @Test
