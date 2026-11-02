@@ -23,11 +23,17 @@ adb install -r -g app/build/outputs/apk/debug/iPhoneMiror-debug.apk
 adb shell pm grant $PKG android.permission.POST_NOTIFICATIONS || true
 adb shell settings put system screen_off_timeout 600000 || true
 adb shell input keyevent KEYCODE_WAKEUP || true
+# The emulator's own launcher sometimes ANRs under software rendering; hide system
+# error dialogs so they don't cover the app screenshots.
+adb shell settings put global hide_error_dialogs 1 || true
+adb shell settings put global anr_show_background 0 || true
 
 shot() {
   local name=$1; shift
   adb shell am start -W -n "$PKG/$ACT" "$@" > /dev/null
   sleep 4
+  adb shell am broadcast -a android.intent.action.CLOSE_SYSTEM_DIALOGS > /dev/null 2>&1 || true
+  sleep 1
   adb exec-out screencap -p > "$OUT/screens/$name.png"
 }
 
@@ -45,7 +51,9 @@ shot 09-mirroring-waiting --es start_route MIRRORING
 
 # Self-test: real AirPlay handshake + FairPlay + MediaCodec decode over localhost.
 adb shell am start -W -n "$PKG/$ACT" --es start_route MIRRORING --ez start_receiver true --ez run_self_test true > /dev/null
-sleep 9
+sleep 8
+adb shell am broadcast -a android.intent.action.CLOSE_SYSTEM_DIALOGS > /dev/null 2>&1 || true
+sleep 1
 adb exec-out screencap -p > "$OUT/screens/10-mirroring-self-test.png"
 adb shell dumpsys meminfo $PKG > "$OUT/meminfo-during-stream.txt"
 sleep 6
