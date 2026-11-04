@@ -90,10 +90,15 @@ class HidTouchTranslator {
                 primary = e.id
                 lastPos = e.point
                 pressPending = true
-                // A pointer idle for a while is hidden by iOS; the first report only wakes it.
-                val settle = if (e.timeMs - lastReportMs > WAKE_AFTER_MS) WAKE_SETTLE_MS else ARRIVE_SETTLE_MS
+                // A hidden (auto-hidden) iOS pointer uses the first report only to wake up, so
+                // after an idle period the position is sent twice before the finger presses.
+                val waking = e.timeMs - lastReportMs > WAKE_AFTER_MS
                 lastReportMs = e.timeMs
-                return Output(listOf(abs(0, lastPos)), pressAfterMs = settle)
+                return if (waking) {
+                    Output(listOf(abs(0, lastPos), HidCommand.Delay(WAKE_GAP_MS), abs(0, lastPos)), pressAfterMs = WAKE_SETTLE_MS)
+                } else {
+                    Output(listOf(abs(0, lastPos)), pressAfterMs = ARRIVE_SETTLE_MS)
+                }
             }
             is TouchEvent.Move -> {
                 for ((id, p) in e.points) if (id in active) active[id] = p
@@ -229,8 +234,9 @@ class HidTouchTranslator {
 
     companion object {
         const val ARRIVE_SETTLE_MS = 30L
-        const val WAKE_AFTER_MS = 2_000L
-        const val WAKE_SETTLE_MS = 300L
+        const val WAKE_AFTER_MS = 1_500L
+        const val WAKE_GAP_MS = 70L
+        const val WAKE_SETTLE_MS = 180L
         const val TAP_HOLD_MS = 40L
         const val SCROLL_UNITS = 40f
         const val REL_UNITS = 900f

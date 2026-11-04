@@ -68,11 +68,17 @@ class GestureAndTranslatorTest {
         val t = HidTouchTranslator().apply { aspect = this@GestureAndTranslatorTest.aspect }
         val p = NPoint(0.25f, 0.5f)
         val down = t.onEvent(TouchEvent.Down(0, p, 10_000))
-        val hover = reports(down.commands).single()
-        assertEquals(0, buttons(hover))
-        assertEquals(8191, x(hover)); assertEquals(16383, y(hover))
-        // First touch after idle wakes the pointer first.
+        val hovers = reports(down.commands)
+        // First touch after idle: the position is sent twice (wake, then place) before pressing.
+        assertEquals(2, hovers.size)
+        assertTrue(down.commands.any { it is HidCommand.Delay })
+        hovers.forEach { assertEquals(0, buttons(it)); assertEquals(8191, x(it)); assertEquals(16383, y(it)) }
         assertEquals(HidTouchTranslator.WAKE_SETTLE_MS, down.pressAfterMs)
+        // A touch right after the previous one is placed once and pressed almost immediately.
+        t.onPressDue(); t.onEvent(TouchEvent.Up(0, p, 10_050))
+        val quick = t.onEvent(TouchEvent.Down(0, p, 10_400))
+        assertEquals(1, reports(quick.commands).size)
+        assertEquals(HidTouchTranslator.ARRIVE_SETTLE_MS, quick.pressAfterMs)
         val press = reports(t.onPressDue()).single()
         assertEquals(HidReports.BUTTON_LEFT, buttons(press))
         val up = reports(t.onEvent(TouchEvent.Up(0, p, 10_100)).commands)

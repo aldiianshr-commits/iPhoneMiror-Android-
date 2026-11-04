@@ -74,11 +74,12 @@ class TouchControlManager(
 
     fun configure(s: AppSettings) {
         settings = s
-        translator.absolute = s.hidPointerMode == HidPointerMode.ABSOLUTE
+        // Always direct (absolute) touch: the finger position is the iPhone touch position.
+        translator.absolute = true
         translator.orientation = s.hidOrientation
         translator.invertScroll = s.invertScroll
         translator.relativeSpeed = s.pointerSpeed
-        hid.setPointerMode(s.hidPointerMode == HidPointerMode.ABSOLUTE)
+        hid.setPointerMode(true)
         recompute()
     }
 
@@ -360,8 +361,7 @@ class TouchControlManager(
             !h.registered -> BackendStatus(false, "Kontrol Bluetooth belum diaktifkan", true, false)
             h.link != BluetoothHidController.Link.CONNECTED -> BackendStatus(false, "iPhone belum tersambung ke tablet lewat Bluetooth", true, false)
             else -> BackendStatus(true,
-                if (translator.absolute) "Terhubung ke ${h.host} — pointer absolut (butuh iOS 18+ dan AssistiveTouch)"
-                else "Terhubung ke ${h.host} — mode trackpad relatif (AssistiveTouch)", true, false)
+                "Terhubung ke ${h.host} — sentuhan langsung", true, false)
         }
         val advanced = settings.showAdvancedTouch || settings.touchBackend == TouchBackendPref.XCTEST
         val wdaOk = advanced && wda != null && wdaSession != null

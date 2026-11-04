@@ -73,6 +73,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.layout.layout
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
@@ -126,6 +127,7 @@ fun MirroringScreen(vm: ReceiverViewModel, fullscreen: Boolean, onFullscreen: (B
     var chromeVisible by remember { mutableStateOf(true) }
     var zoom by remember { mutableFloatStateOf(1f) }
     var pan by remember { mutableStateOf(Offset.Zero) }
+    var toolbarHeightPx by remember { mutableStateOf(0) }
 
     val streaming = state.status == ReceiverStatus.MIRRORING && stats.hasVideo
     val selfTest = state.device?.model == ReceiverController.SELF_TEST_MODEL
@@ -139,7 +141,10 @@ fun MirroringScreen(vm: ReceiverViewModel, fullscreen: Boolean, onFullscreen: (B
     }
 
     Box(Modifier.fillMaxSize().background(Color.Black).testTag("mirroring_root")) {
-        BoxWithConstraints(Modifier.fillMaxSize().clipToBounds()) {
+        // Outside fullscreen the iPhone picture sits below the toolbar, so the top of the iPhone
+        // screen (status bar, tabs) is visible and touchable instead of hidden under the tools.
+        val topInset = if (fullscreen) 0.dp else with(LocalDensity.current) { toolbarHeightPx.toDp() }
+        BoxWithConstraints(Modifier.fillMaxSize().padding(top = topInset).clipToBounds()) {
             val density = LocalDensity.current
             val cw = with(density) { maxWidth.toPx() }
             val ch = with(density) { maxHeight.toPx() }
@@ -187,7 +192,8 @@ fun MirroringScreen(vm: ReceiverViewModel, fullscreen: Boolean, onFullscreen: (B
 
         AnimatedVisibility(chromeVisible || !fullscreen, enter = fadeIn(), exit = fadeOut(), modifier = Modifier.align(Alignment.TopCenter)) {
             Row(
-                Modifier.fillMaxWidth().background(Color(0xCC0B0B0C)).padding(horizontal = 16.dp, vertical = 10.dp),
+                Modifier.fillMaxWidth().onSizeChanged { toolbarHeightPx = it.height }
+                    .background(Color(0xCC0B0B0C)).padding(horizontal = 16.dp, vertical = 10.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column(Modifier.weight(1f)) {
@@ -360,7 +366,8 @@ private fun TouchStatusBar(
         }
         if (expanded) {
             Text(
-                if (active) "Sentuh dan geser layar ini seperti layar iPhone. Satu jari; pinch tidak tersedia lewat Bluetooth."
+                if (active) "Sentuh dan geser layar ini seperti layar iPhone. Satu jari; pinch tidak tersedia lewat Bluetooth. " +
+                    "Titik abu-abu di iPhone adalah penanda AssistiveTouch — atur Auto-Hide agar tak terlihat (lihat Kontrol Sentuh)."
                 else "Sambungkan kontrol di halaman Kontrol Sentuh agar layar ini bisa disentuh. " + (touch.unsupportedReason ?: ""),
                 style = MaterialTheme.typography.bodySmall, color = Palette.TextSecondary,
                 modifier = Modifier.padding(start = 12.dp, end = 12.dp, bottom = 10.dp),

@@ -179,10 +179,22 @@ fun TouchControlScreen(receiverVm: ReceiverViewModel, onNavigate: (AppScreen) ->
                         }
                     }
                     // 5. AssistiveTouch
-                    Step(5, "Nyalakan AssistiveTouch di iPhone", null) {
+                    Step(5, "Atur iPhone agar terasa seperti layar sentuh", null) {
                         Text(
-                            "iPhone: Pengaturan → Aksesibilitas → Sentuh → AssistiveTouch → Aktif. Tanpa ini pointer bergerak tetapi ketukan tidak bekerja. " +
-                                "Tablet tidak bisa mendeteksi pengaturan ini — gunakan uji di langkah 6.",
+                            "iOS hanya menerima sentuhan dari perangkat Bluetooth lewat AssistiveTouch. Atur sekali di iPhone, " +
+                                "Pengaturan → Aksesibilitas → Sentuh → AssistiveTouch:",
+                            style = MaterialTheme.typography.bodySmall, color = Palette.TextSecondary,
+                        )
+                        listOf(
+                            "AssistiveTouch → Aktif (wajib; tanpa ini sentuhan tidak bekerja)",
+                            "Gaya Penanda (Pointer Style) → Sembunyikan Otomatis (Auto-Hide) → Aktif, waktu paling singkat",
+                            "Gaya Penanda → Ukuran paling kecil",
+                            "Kekeburaman Saat Diam (Idle Opacity) → paling rendah, lalu geser tombol bulat ke tepi layar",
+                        ).forEach {
+                            Text("•  $it", style = MaterialTheme.typography.bodySmall, color = Palette.Text)
+                        }
+                        Text(
+                            "Dengan begitu titik penanda hilang setelah jari diangkat dan tombol AssistiveTouch nyaris tak terlihat.",
                             style = MaterialTheme.typography.bodySmall, color = Palette.TextSecondary,
                         )
                     }
@@ -197,7 +209,7 @@ fun TouchControlScreen(receiverVm: ReceiverViewModel, onNavigate: (AppScreen) ->
                     }
                     Spacer(Modifier.size(6.dp))
                     Check(
-                        "iOS 18+ untuk pointer absolut" + (receiver.device?.osVersion?.let { " — iPhone Anda iOS $it" } ?: ""),
+                        "iOS 18+ untuk sentuhan langsung" + (receiver.device?.osVersion?.let { " — iPhone Anda iOS $it" } ?: ""),
                         iosMajor?.let { it >= 18 },
                     )
                     hid.error?.let { Spacer(Modifier.size(6.dp)); InfoNote(it, color = Palette.Warn) }
@@ -213,13 +225,6 @@ fun TouchControlScreen(receiverVm: ReceiverViewModel, onNavigate: (AppScreen) ->
                         vm.update { it.copy(showTouchStatusBar = v) }
                     }
                                         Spacer(Modifier.size(6.dp))
-                    Label("Format pointer")
-                    Choice(HidPointerMode.entries.map { it.label }, HidPointerMode.entries.indexOf(s.hidPointerMode)) { i ->
-                        vm.update { it.copy(hidPointerMode = HidPointerMode.entries[i]) }
-                    }
-                    Spacer(Modifier.size(4.dp))
-                    InfoNote("Absolut = ketukan tepat di posisi jari (iOS 18+). Setelah mengganti format, lupakan tablet di iPhone (Pengaturan → Bluetooth) lalu pasangkan ulang.")
-                    Spacer(Modifier.size(10.dp))
                     Label("Pemetaan saat iPhone landscape")
                     Choice(HidOrientation.entries.map { it.label }, HidOrientation.entries.indexOf(s.hidOrientation)) { i ->
                         vm.update { it.copy(hidOrientation = HidOrientation.entries[i]) }

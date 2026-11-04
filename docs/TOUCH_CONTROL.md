@@ -92,7 +92,10 @@ Tidak butuh komputer, kabel, atau aplikasi di iPhone. Halaman **Kontrol Sentuh**
    *Cari iPhone* → *Pasangkan* → konfirmasi kode yang sama di kedua perangkat. (Alternatif: *Buat tablet
    terlihat* lalu pilih tablet dari iPhone.) iPhone yang berhasil diingat dan **tersambung ulang otomatis**
    setiap 10 detik bila terputus.
-5. iPhone: *Pengaturan → Aksesibilitas → Sentuh → AssistiveTouch* → **aktif** (iOS 18+ untuk pointer absolut).
+5. iPhone: *Pengaturan → Aksesibilitas → Sentuh → AssistiveTouch* → **aktif** (iOS 18+). Agar terasa seperti
+   layar sentuh biasa: *Gaya Penanda → Sembunyikan Otomatis* aktif dengan waktu tersingkat, ukuran penanda
+   terkecil, dan *Kekeburaman Saat Diam* paling rendah. iOS selalu memakai penanda AssistiveTouch untuk input
+   dari perangkat Bluetooth; tidak ada cara lain tanpa komputer.
 6. **Uji pemetaan** saat mirroring: pointer harus bergerak ke tengah & empat sudut.
 
 Setelah itu layar Mirroring **langsung bisa disentuh seperti layar iPhone** — tidak ada mode atau
