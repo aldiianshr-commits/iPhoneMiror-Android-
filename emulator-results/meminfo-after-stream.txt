@@ -1,0 +1,58 @@
+Applications Memory Usage (in Kilobytes):
+Uptime: 212238 Realtime: 212238
+
+** MEMINFO in pid 5727 [com.aldiianshr.iphonemiror.debug] **
+                   Pss  Private  Private     Swap      Rss     Heap     Heap     Heap
+                 Total    Dirty    Clean    Dirty    Total     Size    Alloc     Free
+                ------   ------   ------   ------   ------   ------   ------   ------
+  Native Heap    18869    18836        0        0    22076    33140    25837     3345
+  Dalvik Heap     9837     9740        0        0    17512    14894     7447     7447
+ Dalvik Other     5661     4572        0        0     7356                           
+        Stack     2472     2472        0        0     2480                           
+       Ashmem       52        0        0        0      692                           
+    Other dev       34        0       32        0      376                           
+     .so mmap     3233      392      212        0    47864                           
+    .jar mmap     1968        0       16        0    38960                           
+    .apk mmap    58437        0    58184        0    59976                           
+    .ttf mmap      319        0       28        0     1272                           
+    .dex mmap        5        0        0        0      724                           
+    .oat mmap       19        0        0        0     1616                           
+    .art mmap     6239     5912       32        0    27140                           
+   Other mmap      580        8      328        0     3300                           
+      Unknown      539      536        0        0     1100                           
+        TOTAL   108264    42468    58832        0   232444    48034    33284    10792
+ 
+ App Summary
+                       Pss(KB)                        Rss(KB)
+                        ------                         ------
+           Java Heap:    15684                          44652
+         Native Heap:    18836                          22076
+                Code:    58832                         152596
+               Stack:     2472                           2480
+            Graphics:        0                              0
+       Private Other:     5476
+              System:     6964
+             Unknown:                                   10640
+ 
+           TOTAL PSS:   108264            TOTAL RSS:   232444      TOTAL SWAP (KB):        0
+ 
+ Objects
+               Views:        9         ViewRootImpl:        1
+         AppContexts:        6           Activities:        1
+              Assets:       19        AssetManagers:        0
+       Local Binders:       22        Proxy Binders:       45
+       Parcel memory:        9         Parcel count:       37
+    Death Recipients:        0             WebViews:        0
+ 
+ SQL
+         MEMORY_USED:      124
+  PAGECACHE_OVERFLOW:       62          MALLOC_SIZE:       46
+ 
+ DATABASES
+      pgsz     dbsz   Lookaside(b) cache hits cache misses cache size  Dbname
+PER CONNECTION STATS
+         4       36             12    10   121     1  /data/user/0/com.aldiianshr.iphonemiror.debug/databases/iphonemiror.db
+         4        8                    0     0     0    (attached) temp
+POOL STATS
+     cache hits  cache misses    cache size  Dbname
+             16           200           216  /data/user/0/com.aldiianshr.iphonemiror.debug/databases/iphonemiror.db

@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuite name="com.aldiianshr.iphonemiror.NavigationUiTest" tests="4" failures="0" errors="0" skipped="0" time="54.726" timestamp="2026-11-04T03:37:40" hostname="localhost">
+  <properties>
+    <property name="device" value="emulator-5554 - 14" />
+    <property name="flavor" value="" />
+    <property name="project" value=":app" />
+  </properties>
+  <testcase name="mirroringScreenNeverShowsVideoWithoutStream" classname="com.aldiianshr.iphonemiror.NavigationUiTest" time="12.725" />
+  <testcase name="touchControlReportsUnsupportedWithoutInputPath" classname="com.aldiianshr.iphonemiror.NavigationUiTest" time="8.122" />
+  <testcase name="allPagesAreReachable" classname="com.aldiianshr.iphonemiror.NavigationUiTest" time="14.141" />
+  <testcase name="selfTestStreamIsDecryptedAndDecoded" classname="com.aldiianshr.iphonemiror.ReceiverPipelineInstrumentedTest" time="18.074" />
+</testsuite>

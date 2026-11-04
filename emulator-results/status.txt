@@ -1,0 +1,2 @@
+release_smoke=ok pid=7317
+instrumented_tests_exit=0

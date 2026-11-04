@@ -1,0 +1,224 @@
+# 2026-11-04T03:37:40.574171649Z:
+test_suite_meta_data {
+  scheduled_test_case_count: 4
+}
+test_status: PASSED
+test_result {
+  test_case {
+    test_class: "NavigationUiTest"
+    test_package: "com.aldiianshr.iphonemiror"
+    test_method: "mirroringScreenNeverShowsVideoWithoutStream"
+    start_time {
+      seconds: 1793763405
+      nanos: 766000000
+    }
+    end_time {
+      seconds: 1793763418
+      nanos: 473000000
+    }
+  }
+  test_status: PASSED
+  output_artifact {
+    label {
+      label: "logcat"
+      namespace: "android"
+    }
+    source_path {
+      path: "/home/runner/work/iPhoneMiror-Android-/iPhoneMiror-Android-/app/build/outputs/androidTest-results/connected/debug/emulator-5554 - 14/logcat-com.aldiianshr.iphonemiror.NavigationUiTest-mirroringScreenNeverShowsVideoWithoutStream.txt"
+    }
+  }
+  output_artifact {
+    label {
+      label: "device-info"
+      namespace: "android"
+    }
+    source_path {
+      path: "/home/runner/work/iPhoneMiror-Android-/iPhoneMiror-Android-/app/build/outputs/androidTest-results/connected/debug/emulator-5554 - 14/device-info.pb"
+    }
+  }
+  output_artifact {
+    label {
+      label: "device-info.meminfo"
+      namespace: "android"
+    }
+    source_path {
+      path: "/home/runner/work/iPhoneMiror-Android-/iPhoneMiror-Android-/app/build/outputs/androidTest-results/connected/debug/emulator-5554 - 14/meminfo"
+    }
+  }
+  output_artifact {
+    label {
+      label: "device-info.cpuinfo"
+      namespace: "android"
+    }
+    source_path {
+      path: "/home/runner/work/iPhoneMiror-Android-/iPhoneMiror-Android-/app/build/outputs/androidTest-results/connected/debug/emulator-5554 - 14/cpuinfo"
+    }
+  }
+}
+test_result {
+  test_case {
+    test_class: "NavigationUiTest"
+    test_package: "com.aldiianshr.iphonemiror"
+    test_method: "touchControlReportsUnsupportedWithoutInputPath"
+    start_time {
+      seconds: 1793763418
+      nanos: 612000000
+    }
+    end_time {
+      seconds: 1793763426
+      nanos: 719000000
+    }
+  }
+  test_status: PASSED
+  output_artifact {
+    label {
+      label: "logcat"
+      namespace: "android"
+    }
+    source_path {
+      path: "/home/runner/work/iPhoneMiror-Android-/iPhoneMiror-Android-/app/build/outputs/androidTest-results/connected/debug/emulator-5554 - 14/logcat-com.aldiianshr.iphonemiror.NavigationUiTest-touchControlReportsUnsupportedWithoutInputPath.txt"
+    }
+  }
+  output_artifact {
+    label {
+      label: "device-info"
+      namespace: "android"
+    }
+    source_path {
+      path: "/home/runner/work/iPhoneMiror-Android-/iPhoneMiror-Android-/app/build/outputs/androidTest-results/connected/debug/emulator-5554 - 14/device-info.pb"
+    }
+  }
+  output_artifact {
+    label {
+      label: "device-info.meminfo"
+      namespace: "android"
+    }
+    source_path {
+      path: "/home/runner/work/iPhoneMiror-Android-/iPhoneMiror-Android-/app/build/outputs/androidTest-results/connected/debug/emulator-5554 - 14/meminfo"
+    }
+  }
+  output_artifact {
+    label {
+      label: "device-info.cpuinfo"
+      namespace: "android"
+    }
+    source_path {
+      path: "/home/runner/work/iPhoneMiror-Android-/iPhoneMiror-Android-/app/build/outputs/androidTest-results/connected/debug/emulator-5554 - 14/cpuinfo"
+    }
+  }
+}
+test_result {
+  test_case {
+    test_class: "NavigationUiTest"
+    test_package: "com.aldiianshr.iphonemiror"
+    test_method: "allPagesAreReachable"
+    start_time {
+      seconds: 1793763426
+      nanos: 724000000
+    }
+    end_time {
+      seconds: 1793763440
+      nanos: 869000000
+    }
+  }
+  test_status: PASSED
+  output_artifact {
+    label {
+      label: "logcat"
+      namespace: "android"
+    }
+    source_path {
+      path: "/home/runner/work/iPhoneMiror-Android-/iPhoneMiror-Android-/app/build/outputs/androidTest-results/connected/debug/emulator-5554 - 14/logcat-com.aldiianshr.iphonemiror.NavigationUiTest-allPagesAreReachable.txt"
+    }
+  }
+  output_artifact {
+    label {
+      label: "device-info"
+      namespace: "android"
+    }
+    source_path {
+      path: "/home/runner/work/iPhoneMiror-Android-/iPhoneMiror-Android-/app/build/outputs/androidTest-results/connected/debug/emulator-5554 - 14/device-info.pb"
+    }
+  }
+  output_artifact {
+    label {
+      label: "device-info.meminfo"
+      namespace: "android"
+    }
+    source_path {
+      path: "/home/runner/work/iPhoneMiror-Android-/iPhoneMiror-Android-/app/build/outputs/androidTest-results/connected/debug/emulator-5554 - 14/meminfo"
+    }
+  }
+  output_artifact {
+    label {
+      label: "device-info.cpuinfo"
+      namespace: "android"
+    }
+    source_path {
+      path: "/home/runner/work/iPhoneMiror-Android-/iPhoneMiror-Android-/app/build/outputs/androidTest-results/connected/debug/emulator-5554 - 14/cpuinfo"
+    }
+  }
+}
+test_result {
+  test_case {
+    test_class: "ReceiverPipelineInstrumentedTest"
+    test_package: "com.aldiianshr.iphonemiror"
+    test_method: "selfTestStreamIsDecryptedAndDecoded"
+    start_time {
+      seconds: 1793763440
+      nanos: 875000000
+    }
+    end_time {
+      seconds: 1793763458
+      nanos: 949000000
+    }
+  }
+  test_status: PASSED
+  output_artifact {
+    label {
+      label: "logcat"
+      namespace: "android"
+    }
+    source_path {
+      path: "/home/runner/work/iPhoneMiror-Android-/iPhoneMiror-Android-/app/build/outputs/androidTest-results/connected/debug/emulator-5554 - 14/logcat-com.aldiianshr.iphonemiror.ReceiverPipelineInstrumentedTest-selfTestStreamIsDecryptedAndDecoded.txt"
+    }
+  }
+  output_artifact {
+    label {
+      label: "device-info"
+      namespace: "android"
+    }
+    source_path {
+      path: "/home/runner/work/iPhoneMiror-Android-/iPhoneMiror-Android-/app/build/outputs/androidTest-results/connected/debug/emulator-5554 - 14/device-info.pb"
+    }
+  }
+  output_artifact {
+    label {
+      label: "device-info.meminfo"
+      namespace: "android"
+    }
+    source_path {
+      path: "/home/runner/work/iPhoneMiror-Android-/iPhoneMiror-Android-/app/build/outputs/androidTest-results/connected/debug/emulator-5554 - 14/meminfo"
+    }
+  }
+  output_artifact {
+    label {
+      label: "device-info.cpuinfo"
+      namespace: "android"
+    }
+    source_path {
+      path: "/home/runner/work/iPhoneMiror-Android-/iPhoneMiror-Android-/app/build/outputs/androidTest-results/connected/debug/emulator-5554 - 14/cpuinfo"
+    }
+  }
+}
+output_artifact {
+  label {
+    label: "test-results.log"
+    namespace: "com.google.testing.platform.runtime.android.driver.AndroidInstrumentationDriver"
+  }
+  source_path {
+    path: "/home/runner/work/iPhoneMiror-Android-/iPhoneMiror-Android-/app/build/outputs/androidTest-results/connected/debug/emulator-5554 - 14/testlog/test-results.log"
+  }
+  type: TEST_DATA
+  mime_type: "text/plain"
+}

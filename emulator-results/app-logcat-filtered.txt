@@ -1,0 +1,10 @@
+11-04 03:37:56.328  5727  5786 I AirPlayReceiver: AirPlay receiver 'iPhoneMiror (sdk_gphone64_x86_64)' listening on port 7000
+11-04 03:38:52.840  5727  6828 I AirPlayReceiver: Control connection conn-1 from 127.0.0.1
+11-04 03:38:53.555  5727  6828 I AirPlay/Pairing: Pair verified: true
+11-04 03:38:53.739  5727  6828 I ReceiverController: Sender: Self-test (bukan iPhone) model=SelfTest Android loopback
+11-04 03:38:53.744  5727  6828 I AirPlayReceiver: Mirror SETUP: data port 41977
+11-04 03:38:53.748  5727  6829 I AirPlayReceiver: Mirror stream connected from /127.0.0.1:38354
+11-04 03:38:54.158  5727  6829 I MirrorChannel: Codec config: 1 SPS / 1 PPS, source 1280x720
+11-04 03:38:54.204  5727  5773 I VideoDecoder: Decoder c2.goldfish.h264.decoder started 1280x720 (hw=true, lowLatency=false)
+11-04 03:38:54.643  5727  5773 I VideoDecoder: Output format 1280x720
+11-04 03:39:10.464  5727  6828 I AirPlayReceiver: Session 625712097677021923 ended: Koneksi kontrol ditutup

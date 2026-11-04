@@ -1,0 +1,42 @@
+INFO: Constructing runner from config.
+INFO: Configuring Android Instrumentation driver: android_instrumentation_runtime {
+  instrumentation_info {
+    app_package: "com.aldiianshr.iphonemiror.debug"
+    test_package: "com.aldiianshr.iphonemiror.debug.test"
+    test_runner_class: "com.aldiianshr.iphonemiror.HiltTestRunner"
+  }
+  instrumentation_args {
+    args_map {
+      key: "additionalTestOutputDir"
+      value: "/sdcard/Android/media/com.aldiianshr.iphonemiror.debug/additional_test_output"
+    }
+  }
+}
+am_instrument_timeout: 31536000
+
+INFO: Configuring AndroidTestApkInstallerPlugin: apks_to_install {
+  apk_paths: "/home/runner/work/iPhoneMiror-Android-/iPhoneMiror-Android-/app/build/outputs/apk/debug/iPhoneMiror-debug.apk"
+  install_options {
+  }
+  uninstall_after_test: true
+}
+apks_to_install {
+  apk_paths: "/home/runner/work/iPhoneMiror-Android-/iPhoneMiror-Android-/app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk"
+  install_options {
+  }
+  uninstall_after_test: true
+}
+
+INFO: No installables found in test fixture. Nothing to install.
+INFO: Installing [/home/runner/work/iPhoneMiror-Android-/iPhoneMiror-Android-/app/build/outputs/apk/debug/iPhoneMiror-debug.apk] on device emulator-5554.
+INFO: Installing [/home/runner/work/iPhoneMiror-Android-/iPhoneMiror-Android-/app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk] on device emulator-5554.
+INFO: Start logcat streaming.
+INFO: Running Android Instrumentation driver.
+INFO: Copying files from device to host: /sdcard/Android/media/com.aldiianshr.iphonemiror.debug/additional_test_output to /home/runner/work/iPhoneMiror-Android-/iPhoneMiror-Android-/app/build/outputs/connected_android_test_additional_output/debugAndroidTest/connected/emulator-5554 - 14
+INFO: Stop logcat streaming.
+INFO: Uninstalling com.aldiianshr.iphonemiror.debug for device emulator-5554.
+INFO: Uninstalling com.aldiianshr.iphonemiror.debug.test for device emulator-5554.
+INFO: Execute com.aldiianshr.iphonemiror.NavigationUiTest.mirroringScreenNeverShowsVideoWithoutStream: PASSED
+INFO: Execute com.aldiianshr.iphonemiror.NavigationUiTest.touchControlReportsUnsupportedWithoutInputPath: PASSED
+INFO: Execute com.aldiianshr.iphonemiror.NavigationUiTest.allPagesAreReachable: PASSED
+INFO: Execute com.aldiianshr.iphonemiror.ReceiverPipelineInstrumentedTest.selfTestStreamIsDecryptedAndDecoded: PASSED

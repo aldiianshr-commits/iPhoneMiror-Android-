@@ -1,0 +1,1 @@
+11-04 03:37:38.751  4027  4288 I PipelineTest: MEMORY before=Mem(javaHeapKb=20353, nativeHeapKb=23410, totalPssKb=121478) after=Mem(javaHeapKb=6549, nativeHeapKb=19749, totalPssKb=105607) javaHeapGrowthKb=-13804
