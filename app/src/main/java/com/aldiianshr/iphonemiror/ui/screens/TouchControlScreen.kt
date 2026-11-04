@@ -81,7 +81,7 @@ fun TouchControlScreen(receiverVm: ReceiverViewModel, onNavigate: (AppScreen) ->
     val discoverable = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { }
     val connected = hid.link.name == "CONNECTED"
 
-    Page("Kontrol Sentuh", "Sentuh layar iPhone langsung dari Xiaomi Pad 6 — cukup tablet dan iPhone, lewat Bluetooth.") {
+    Page("Kontrol Sentuh", "Layar mirroring dipakai seperti layar iPhone — cukup tablet dan iPhone, lewat Bluetooth.") {
         Panel(Modifier.fillMaxWidth().testTag("touch_status_panel")) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Outlined.TouchApp, null, tint = Palette.Text, modifier = Modifier.size(28.dp))
@@ -206,16 +206,13 @@ fun TouchControlScreen(receiverVm: ReceiverViewModel, onNavigate: (AppScreen) ->
             },
             right = {
                 Panel(Modifier.fillMaxWidth(), title = "Pengaturan sentuhan") {
-                    Toggle("Indikator sentuhan", "Lingkaran di posisi jari & warna status gesture terakhir", s.showTouchIndicators) { v ->
+                    Toggle("Tampilkan titik sentuhan", "Titik kecil di posisi jari (bantu melihat posisi)", s.showTouchIndicators) { v ->
                         vm.update { it.copy(showTouchIndicators = v) }
                     }
                     Toggle("Bar status sentuhan di Mirroring", "Pil kecil di pojok kiri bawah; bisa disembunyikan dari layar Mirroring", s.showTouchStatusBar) { v ->
                         vm.update { it.copy(showTouchStatusBar = v) }
                     }
-                    Toggle("Balik arah scroll 2 jari", "Jika scroll terasa terbalik", s.invertScroll) { v ->
-                        vm.update { it.copy(invertScroll = v) }
-                    }
-                    Spacer(Modifier.size(6.dp))
+                                        Spacer(Modifier.size(6.dp))
                     Label("Format pointer")
                     Choice(HidPointerMode.entries.map { it.label }, HidPointerMode.entries.indexOf(s.hidPointerMode)) { i ->
                         vm.update { it.copy(hidPointerMode = HidPointerMode.entries[i]) }
@@ -228,16 +225,14 @@ fun TouchControlScreen(receiverVm: ReceiverViewModel, onNavigate: (AppScreen) ->
                         vm.update { it.copy(hidOrientation = HidOrientation.entries[i]) }
                     }
                 }
-                Panel(Modifier.fillMaxWidth(), title = "Yang bisa dilakukan", subtitle = "Lewat Bluetooth (tanpa perangkat lain)") {
-                    Matrix1("Tap, double tap, long press", true)
-                    Matrix1("Swipe atas/bawah/kiri/kanan", true)
-                    Matrix1("Drag & drop", true)
-                    Matrix1("Scroll dengan 2 jari", true)
-                    Matrix1("Mengetik teks (keyboard)", true)
-                    Matrix1("Tombol Home, volume, play/pause", true)
-                    Matrix1("Pinch zoom & gesture 3+ jari", false)
-                    Spacer(Modifier.size(6.dp))
-                    InfoNote("iOS hanya menerima satu pointer dari perangkat Bluetooth, jadi pinch tidak mungkin. Untuk zoom, ketuk dua kali (di Foto/Peta/Safari) atau gunakan tombol zoom aplikasi.")
+                Panel(Modifier.fillMaxWidth(), title = "Cara pakai") {
+                    Text(
+                        "Setelah langkah di kiri selesai dan layar iPhone muncul di Mirroring, layar itu langsung bisa disentuh: " +
+                            "ketuk, tahan, geser, dan seret persis seperti di layar iPhone. Tidak ada mode atau gesture khusus.",
+                        style = MaterialTheme.typography.bodyMedium, color = Palette.Text,
+                    )
+                    Spacer(Modifier.size(8.dp))
+                    InfoNote("iOS menerima satu jari dari perangkat Bluetooth, jadi jari kedua diabaikan dan pinch tidak tersedia. Untuk zoom, ketuk dua kali seperti biasa di iPhone.")
                 }
                 Panel(Modifier.fillMaxWidth(), title = "Opsi lanjutan") {
                     Toggle("XCTest / WebDriverAgent (butuh komputer macOS)", "Multi-touch & pinch, tetapi memerlukan komputer dengan Xcode yang terus berjalan",

@@ -103,23 +103,20 @@ class GestureAndTranslatorTest {
         assertEquals((0.2f * HidReports.ABS_MAX).toInt(), y(up.last()))
     }
 
-    @Test fun twoFingersReleaseAndScroll() {
+    @Test fun extraFingersAreIgnoredLikeASinglePointer() {
         val t = HidTouchTranslator()
         t.onEvent(TouchEvent.Down(0, NPoint(0.4f, 0.4f), 0)); t.onPressDue()
-        val second = t.onEvent(TouchEvent.Down(1, NPoint(0.6f, 0.4f), 40))
-        assertEquals(0, buttons(reports(second.commands).single()))
-        val scroll = reports(t.onEvent(TouchEvent.Move(mapOf(0 to NPoint(0.4f, 0.6f), 1 to NPoint(0.6f, 0.6f)), 120)).commands).single()
-        assertTrue("fingers moving down scroll up (positive wheel)", scroll.data[5] > 0)
-        assertNull(t.onEvent(TouchEvent.Up(0, NPoint(0.4f, 0.6f), 200)).unsupported)
-    }
-
-    @Test fun pinchIsReportedUnsupportedForHid() {
-        val t = HidTouchTranslator()
-        t.onEvent(TouchEvent.Down(0, NPoint(0.45f, 0.5f), 0))
-        t.onEvent(TouchEvent.Down(1, NPoint(0.55f, 0.5f), 10))
-        val out = t.onEvent(TouchEvent.Move(mapOf(0 to NPoint(0.3f, 0.5f), 1 to NPoint(0.7f, 0.5f)), 100))
-        assertNotNull(out.unsupported)
-        assertTrue(out.commands.isEmpty())
+        // A second finger does not release, scroll or move the pointer.
+        assertTrue(t.onEvent(TouchEvent.Down(1, NPoint(0.6f, 0.4f), 40)).commands.isEmpty())
+        val move = reports(t.onEvent(TouchEvent.Move(mapOf(0 to NPoint(0.4f, 0.6f), 1 to NPoint(0.9f, 0.9f)), 120)).commands).single()
+        assertEquals(HidReports.BUTTON_LEFT, buttons(move))
+        assertEquals((0.6f * HidReports.ABS_MAX).toInt(), y(move))
+        assertTrue(t.onEvent(TouchEvent.Move(mapOf(1 to NPoint(0.1f, 0.1f)), 150)).commands.isEmpty())
+        assertTrue(t.onEvent(TouchEvent.Up(1, NPoint(0.1f, 0.1f), 160)).commands.isEmpty())
+        assertTrue(t.isPressed)
+        val up = reports(t.onEvent(TouchEvent.Up(0, NPoint(0.4f, 0.6f), 200)).commands)
+        assertEquals(0, buttons(up.last()))
+        assertNull(t.onEvent(TouchEvent.Down(2, NPoint(0.5f, 0.5f), 300)).unsupported)
     }
 
     @Test fun relativeModeTapClicksAndDragMoves() {

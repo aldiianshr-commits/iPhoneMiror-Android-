@@ -104,9 +104,7 @@ class TouchControlManager(
         if (e is TouchEvent.Down && recorder.isEmpty) {
             gestureStartNanos = System.nanoTime()
             gestureBackend = backend
-            if (backend == null) {
-                publish(FeedbackStatus.UNSUPPORTED, null, _state.value.unsupportedReason ?: "Kontrol sentuh tidak tersedia", null)
-            }
+
         }
         recorder.onEvent(e)
         when (gestureBackend) {
@@ -119,7 +117,6 @@ class TouchControlManager(
     private fun hidEvent(e: TouchEvent) {
         val out = translator.onEvent(e)
         hid.submit(out.commands)
-        out.unsupported?.let { publish(FeedbackStatus.UNSUPPORTED, null, it, null) }
         out.pressAfterMs?.let { ms ->
             pressJob?.cancel()
             pressJob = scope.launch {
@@ -140,14 +137,10 @@ class TouchControlManager(
         recorder.reset()
         when (backend) {
             BackendKind.BLUETOOTH_HID -> {
-                val unsupported = kind == GestureKind.PINCH_IN || kind == GestureKind.PINCH_OUT || kind == GestureKind.MULTI_FINGER
-                if (unsupported) {
-                    publish(FeedbackStatus.UNSUPPORTED, kind, "${kind?.label} butuh multi-touch; HID hanya satu pointer. Gunakan XCTest.", null, points)
-                } else {
-                    val id = publish(if (hid.lastSendOk) FeedbackStatus.SENT else FeedbackStatus.FAILED, kind,
-                        if (hid.lastSendOk) "Dikirim lewat Bluetooth HID" else "Laporan HID ditolak oleh stack Bluetooth", null, points)
-                    if (hid.lastSendOk) watchScreenResponse(id, kind, BackendKind.BLUETOOTH_HID, started, points)
-                }
+                // Direct manipulation: no gesture naming, only whether the iPhone responded.
+                val id = publish(if (hid.lastSendOk) FeedbackStatus.SENT else FeedbackStatus.FAILED, null,
+                    if (hid.lastSendOk) null else "Bluetooth menolak laporan sentuhan", null, points)
+                if (hid.lastSendOk) watchScreenResponse(id, null, BackendKind.BLUETOOTH_HID, started, points)
             }
             BackendKind.XCTEST -> replayWithXcTest(tracks, kind, points)
             null -> Unit
@@ -165,7 +158,7 @@ class TouchControlManager(
                     val ms = (f - startNanos) / 1_000_000
                     recordLatency(ms)
                     update(id, FeedbackStatus.SCREEN_RESPONSE, kind, backend,
-                        "Frame baru diterima $ms ms setelah sentuhan", ms, points)
+                        "iPhone merespons dalam $ms ms", ms, points)
                     return@launch
                 }
                 delay(10)

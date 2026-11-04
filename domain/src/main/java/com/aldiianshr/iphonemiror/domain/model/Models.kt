@@ -155,7 +155,7 @@ data class AppSettings(
     val invertScroll: Boolean = false,
     /** WebDriverAgent base URL; empty = derive from the mirroring iPhone's IP (port 8100). */
     val wdaUrl: String = "",
-    val showTouchIndicators: Boolean = true,
+    val showTouchIndicators: Boolean = false,
     /** Touch status pill on the mirroring view (can be hidden entirely). */
     val showTouchStatusBar: Boolean = true,
     /** Relative (trackpad) pointer speed multiplier. */

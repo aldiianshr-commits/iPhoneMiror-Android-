@@ -102,7 +102,6 @@ import com.aldiianshr.iphonemiror.ui.viewmodel.ReceiverViewModel
 import com.aldiianshr.iphonemiror.ui.viewmodel.TouchViewModel
 import kotlinx.coroutines.delay
 
-private enum class DisplayMode(val label: String) { VIEW_ONLY("View Only"), TOUCH("Touch Mode") }
 
 fun FeedbackStatus.color(): Color = when (this) {
     FeedbackStatus.CONFIRMED, FeedbackStatus.SCREEN_RESPONSE -> Palette.Ok
@@ -121,7 +120,6 @@ fun MirroringScreen(vm: ReceiverViewModel, fullscreen: Boolean, onFullscreen: (B
     val livePoints by touchVm.livePoints.collectAsStateWithLifecycle()
     val settings by touchVm.settings.collectAsStateWithLifecycle()
 
-    var mode by rememberSaveable { mutableStateOf(DisplayMode.TOUCH) }
     var scaleMode by rememberSaveable { mutableStateOf(ScaleMode.ASPECT) }
     var showStats by rememberSaveable { mutableStateOf(false) }
     var showKeyboard by rememberSaveable { mutableStateOf(false) }
@@ -131,7 +129,10 @@ fun MirroringScreen(vm: ReceiverViewModel, fullscreen: Boolean, onFullscreen: (B
 
     val streaming = state.status == ReceiverStatus.MIRRORING && stats.hasVideo
     val selfTest = state.device?.model == ReceiverController.SELF_TEST_MODEL
-    val touchActive = mode == DisplayMode.TOUCH && streaming
+    // The mirrored screen is directly interactive as soon as the touch link is up:
+    // the finger on the tablet is the finger on the iPhone. Otherwise it is view-only.
+    val touchActive = streaming && touch.supported
+    LaunchedEffect(touchActive) { if (touchActive) { zoom = 1f; pan = Offset.Zero } }
 
     LaunchedEffect(fullscreen, chromeVisible) {
         if (fullscreen && chromeVisible) { delay(3_500); chromeVisible = false }
@@ -169,7 +170,7 @@ fun MirroringScreen(vm: ReceiverViewModel, fullscreen: Boolean, onFullscreen: (B
             }
 
             if (settings.showTouchIndicators && streaming) {
-                TouchIndicators(displayed, livePoints, touch.lastFeedback?.takeIf { System.currentTimeMillis() - it.timeMs < 1_500 })
+                TouchIndicators(displayed, livePoints, null)
             }
         }
 
@@ -197,8 +198,6 @@ fun MirroringScreen(vm: ReceiverViewModel, fullscreen: Boolean, onFullscreen: (B
                         Chip("Koneksi: ${quality.label}", quality.color())
                     }
                 }
-                ModeToggle(mode) { mode = it; if (it == DisplayMode.TOUCH) { zoom = 1f; pan = Offset.Zero } }
-                Spacer(Modifier.width(8.dp))
                 ToolButton(if (fullscreen) Icons.Outlined.FullscreenExit else Icons.Outlined.Fullscreen, "Layar penuh", "btn_fullscreen") { onFullscreen(!fullscreen) }
                 ToolButton(Icons.Outlined.AspectRatio, "Skala: ${scaleMode.label}", "btn_scale") {
                     scaleMode = ScaleMode.entries[(scaleMode.ordinal + 1) % ScaleMode.entries.size]
@@ -235,7 +234,6 @@ fun MirroringScreen(vm: ReceiverViewModel, fullscreen: Boolean, onFullscreen: (B
         // fullscreen, and can be switched off entirely (toolbar button / Kontrol Sentuh page).
         if (streaming && settings.showTouchStatusBar && (!fullscreen || chromeVisible)) {
             TouchStatusBar(
-                mode = mode,
                 touch = touch,
                 onHide = { touchVm.update { it.copy(showTouchStatusBar = false) } },
                 modifier = Modifier.align(Alignment.BottomStart).padding(12.dp),
@@ -330,90 +328,43 @@ private fun TouchIndicators(displayed: Rect, live: Map<Int, NPoint>, last: com.a
 
 @Composable
 private fun TouchStatusBar(
-    mode: DisplayMode,
     touch: com.aldiianshr.iphonemiror.input.touch.TouchControlState,
     onHide: () -> Unit,
     modifier: Modifier,
 ) {
     var expanded by remember { mutableStateOf(false) }
-    val fb = touch.lastFeedback
-    // Gesture feedback is shown briefly, then the pill shrinks back to the backend name only.
-    var showFeedback by remember { mutableStateOf(false) }
-    LaunchedEffect(fb?.gestureId, fb?.status) {
-        if (fb != null) { showFeedback = true; delay(2_500); showFeedback = false }
-    }
-    val (label, color) = when {
-        mode == DisplayMode.VIEW_ONLY -> "View Only" to Palette.TextSecondary
-        touch.activeBackend != null -> "Touch: ${touch.activeBackend!!.label}" to Palette.Ok
-        else -> "Touch: tidak tersedia" to Palette.Warn
-    }
+    val active = touch.supported
+    val label = if (active) "Kontrol langsung aktif" else "Hanya tampilan"
+    val color = if (active) Palette.Ok else Palette.Warn
 
-    if (!expanded) {
+    Column(
+        modifier.widthIn(max = 520.dp)
+            .clip(RoundedCornerShape(if (expanded) 12.dp else 50.dp))
+            .background(Color(0xB3141416))
+            .border(1.dp, Palette.Outline, RoundedCornerShape(if (expanded) 12.dp else 50.dp))
+            .testTag("touch_status"),
+    ) {
         Row(
-            modifier
-                .clip(RoundedCornerShape(50))
-                .background(Color(0xB3141416))
-                .border(1.dp, Palette.Outline, RoundedCornerShape(50))
-                .clickable { expanded = true }
-                .padding(start = 10.dp, end = 4.dp, top = 4.dp, bottom = 4.dp)
-                .testTag("touch_status"),
+            Modifier.clickable { expanded = !expanded }.padding(start = 10.dp, end = 4.dp, top = 4.dp, bottom = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Box(Modifier.size(7.dp).clip(RoundedCornerShape(50)).background(color))
             Spacer(Modifier.width(8.dp))
             Text(label, style = MaterialTheme.typography.labelMedium, color = Palette.Text, maxLines = 1)
-            if (showFeedback && fb != null && mode == DisplayMode.TOUCH && fb.status != FeedbackStatus.UNSUPPORTED) {
-                Text(
-                    " · " + listOfNotNull(fb.kind?.label, fb.status.label, fb.latencyMs?.let { "$it ms" }).joinToString(" · "),
-                    style = MaterialTheme.typography.labelMedium, color = fb.status.color(), maxLines = 1,
-                    overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 360.dp),
-                )
+            if (active) touch.averageResponseMs?.let {
+                Text(" · respon $it ms", style = MaterialTheme.typography.labelMedium, color = Palette.TextSecondary, maxLines = 1)
             }
             androidx.compose.material3.IconButton(onClick = onHide, modifier = Modifier.size(26.dp).testTag("touch_status_hide")) {
                 Icon(Icons.Outlined.Close, "Sembunyikan", tint = Palette.TextSecondary, modifier = Modifier.size(14.dp))
             }
         }
-        return
-    }
-
-    Column(
-        modifier.widthIn(max = 560.dp)
-            .clip(RoundedCornerShape(12.dp)).background(Color(0xE6141416))
-            .border(1.dp, Palette.Outline, RoundedCornerShape(12.dp)).padding(horizontal = 12.dp, vertical = 8.dp)
-            .testTag("touch_status_expanded"),
-        verticalArrangement = Arrangement.spacedBy(3.dp),
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(if (mode == DisplayMode.TOUCH) Icons.Outlined.TouchApp else Icons.Outlined.Visibility, null,
-                tint = Palette.TextSecondary, modifier = Modifier.size(16.dp))
-            Spacer(Modifier.width(8.dp))
+        if (expanded) {
             Text(
-                if (mode == DisplayMode.TOUCH && touch.activeBackend == null) "Touch Control: Unsupported" else label,
-                style = MaterialTheme.typography.labelLarge, color = color, modifier = Modifier.weight(1f, fill = false),
+                if (active) "Sentuh dan geser layar ini seperti layar iPhone. Satu jari; pinch tidak tersedia lewat Bluetooth."
+                else "Sambungkan kontrol di halaman Kontrol Sentuh agar layar ini bisa disentuh. " + (touch.unsupportedReason ?: ""),
+                style = MaterialTheme.typography.bodySmall, color = Palette.TextSecondary,
+                modifier = Modifier.padding(start = 12.dp, end = 12.dp, bottom = 10.dp),
             )
-            if (touch.activeBackend != null) {
-                touch.averageResponseMs?.let {
-                    Spacer(Modifier.width(10.dp))
-                    Text("respon rata-rata $it ms", style = MaterialTheme.typography.labelMedium, color = Palette.TextSecondary)
-                }
-                touch.connectionLatencyMs?.let {
-                    Spacer(Modifier.width(10.dp))
-                    Text("latensi WDA $it ms", style = MaterialTheme.typography.labelMedium, color = Palette.TextSecondary)
-                }
-            }
-        }
-        if (mode == DisplayMode.TOUCH && touch.activeBackend == null) {
-            Text(touch.unsupportedReason ?: "", style = MaterialTheme.typography.bodySmall, color = Palette.TextSecondary, maxLines = 4, overflow = TextOverflow.Ellipsis)
-        }
-        if (fb != null && fb.status != FeedbackStatus.UNSUPPORTED) {
-            Text(
-                listOfNotNull(fb.kind?.label, fb.status.label, fb.message).joinToString(" · "),
-                style = MaterialTheme.typography.bodySmall, color = fb.status.color(), maxLines = 2, overflow = TextOverflow.Ellipsis,
-            )
-        }
-        Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
-            TextButton(onClick = { expanded = false }) { Text("Ciutkan", color = Palette.TextSecondary) }
-            TextButton(onClick = onHide) { Text("Sembunyikan", color = Palette.TextSecondary) }
         }
     }
 }
@@ -443,27 +394,6 @@ private fun StatsPanel(
             "gesture     ${touch.gesturesSent} dikirim",
             "respon      ${touch.averageResponseMs?.let { "$it ms" } ?: "-"}",
         ).forEach { Text(it, style = Mono, color = Palette.Text) }
-    }
-}
-
-@Composable
-private fun ModeToggle(mode: DisplayMode, onChange: (DisplayMode) -> Unit) {
-    Row(
-        Modifier.clip(RoundedCornerShape(12.dp)).background(Palette.SurfaceHigher).padding(3.dp),
-    ) {
-        DisplayMode.entries.forEach { m ->
-            val sel = m == mode
-            Text(
-                m.label,
-                style = MaterialTheme.typography.labelMedium,
-                color = if (sel) Palette.OnAccent else Palette.Text,
-                modifier = Modifier.clip(RoundedCornerShape(9.dp))
-                    .background(if (sel) Palette.Accent else Color.Transparent)
-                    .clickable { onChange(m) }
-                    .testTag("mode_${m.name}")
-                    .padding(horizontal = 12.dp, vertical = 8.dp),
-            )
-        }
     }
 }
 

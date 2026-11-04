@@ -52,7 +52,7 @@ Video digambar dengan rect yang sama persis (`Modifier.placeAt(rect)`), jadi gam
   karena iOS menyembunyikannya) → tombol ditekan → posisi dikirim tiap ≤8 ms selama jari bergerak →
   jari diangkat → tombol dilepas. Hasilnya tap, double tap, long press, swipe 4 arah, dan drag & drop
   direproduksi seperti yang dilakukan.
-- Dua jari → scroll (wheel/pan). **Pinch & 3+ jari → Unsupported** (satu pointer).
+- Jari kedua dan seterusnya diabaikan (iOS hanya menerima satu pointer), sehingga perilakunya seperti satu jari di layar iPhone.
 
 ### Backend XCTest / WebDriverAgent (multi-touch)
 - `GestureRecorder` merekam lintasan semua jari; saat semua jari terangkat, `W3cActions` menyusun
@@ -76,10 +76,9 @@ ketuk untuk detail, ✕ untuk menyembunyikan; tombol ✋ di toolbar atau halaman
 untuk menampilkannya lagi. Status gesture hanya muncul ±2,5 detik.
 Statistik menampilkan respon rata-rata (10 gesture terakhir) dan latensi koneksi WDA (ping `/status`).
 
-## Mode tampilan
-- **View Only** — sentuhan tidak diteruskan; pinch/geser untuk zoom/pan lokal.
-- **Touch Mode** — sentuhan diteruskan lewat backend aktif.
-- **Fullscreen Touch** — Touch Mode + layar penuh; toolbar disembunyikan, tombol kecil ⋯ di pojok untuk memunculkannya.
+## Tampilan
+- Kontrol tersambung → layar mirroring langsung interaktif. Tidak tersambung → hanya tampilan (pinch untuk zoom lokal).
+- **Layar penuh** — toolbar disembunyikan, tombol kecil ⋯ di pojok untuk memunculkannya.
 - **Rasio asli / Isi / Fit to screen** — mode skala; pemetaan sentuhan mengikuti otomatis.
 
 ## Persiapan: hanya tablet + iPhone (Bluetooth HID — jalur utama)
@@ -96,7 +95,9 @@ Tidak butuh komputer, kabel, atau aplikasi di iPhone. Halaman **Kontrol Sentuh**
 5. iPhone: *Pengaturan → Aksesibilitas → Sentuh → AssistiveTouch* → **aktif** (iOS 18+ untuk pointer absolut).
 6. **Uji pemetaan** saat mirroring: pointer harus bergerak ke tengah & empat sudut.
 
-Lalu di Mirroring pilih **Touch Mode**. Batas jalur ini: satu pointer — pinch dan gesture 3+ jari tidak mungkin.
+Setelah itu layar Mirroring **langsung bisa disentuh seperti layar iPhone** — tidak ada mode atau
+gesture khusus: jari menekan, bergerak dan diangkat, iPhone mengikuti secara real-time. iOS menerima
+satu pointer dari perangkat Bluetooth, jadi jari kedua diabaikan dan pinch tidak tersedia.
 
 ## Opsi lanjutan: XCTest / WebDriverAgent (butuh komputer macOS)
 

@@ -63,7 +63,7 @@ class HidTouchTranslator {
 
     /** Called when the press scheduled by a Down falls due. */
     fun onPressDue(): List<HidCommand> {
-        if (!absolute || !pressPending || scrollMode || primary !in active) return emptyList()
+        if (!absolute || !pressPending || primary == -1 || primary !in active) return emptyList()
         pressPending = false
         pressed = true
         return listOf(abs(HidReports.BUTTON_LEFT, lastPos))
@@ -76,52 +76,36 @@ class HidTouchTranslator {
         return out
     }
 
+    /**
+     * Absolute mode = direct manipulation, exactly like a finger on the iPhone screen: the
+     * first finger presses where it touches, follows the finger while it moves and lifts when
+     * it lifts. iOS accepts a single pointer from a Bluetooth device, so extra fingers are
+     * ignored (they neither cancel nor disturb the first finger).
+     */
     private fun absEvent(e: TouchEvent): Output {
         when (e) {
             is TouchEvent.Down -> {
                 active[e.id] = e.point
-                if (active.size == 1) {
-                    primary = e.id
-                    lastPos = e.point
-                    unsupportedFlagged = false
-                    pressPending = true
-                    // A pointer idle for a while is hidden by iOS; the first report only wakes it.
-                    val settle = if (e.timeMs - lastReportMs > WAKE_AFTER_MS) WAKE_SETTLE_MS else ARRIVE_SETTLE_MS
-                    lastReportMs = e.timeMs
-                    return Output(listOf(abs(0, lastPos)), pressAfterMs = settle)
-                }
-                // Second finger: leave pointer mode, become two-finger scroll.
-                val cmds = ArrayList<HidCommand>()
-                if (pressed) cmds += abs(0, lastPos)
-                pressed = false
-                pressPending = false
-                scrollMode = true
-                centroid = centroidOf()
-                startSpread = spread()
-                wheelAcc = 0f; panAcc = 0f
+                if (primary != -1) return Output(emptyList())
+                primary = e.id
+                lastPos = e.point
+                pressPending = true
+                // A pointer idle for a while is hidden by iOS; the first report only wakes it.
+                val settle = if (e.timeMs - lastReportMs > WAKE_AFTER_MS) WAKE_SETTLE_MS else ARRIVE_SETTLE_MS
                 lastReportMs = e.timeMs
-                val unsupported = if (active.size >= 3 && !unsupportedFlagged) {
-                    unsupportedFlagged = true
-                    "Gesture 3+ jari tidak dapat dikirim lewat HID (satu pointer)."
-                } else null
-                return Output(cmds, unsupported = unsupported)
+                return Output(listOf(abs(0, lastPos)), pressAfterMs = settle)
             }
             is TouchEvent.Move -> {
                 for ((id, p) in e.points) if (id in active) active[id] = p
+                val p = e.points[primary] ?: return Output(emptyList())
                 lastReportMs = e.timeMs
-                if (scrollMode) return scroll()
-                val p = active[primary] ?: return Output(emptyList())
                 lastPos = p
                 return Output(listOf(abs(if (pressed) HidReports.BUTTON_LEFT else 0, p, coalesce = true)))
             }
             is TouchEvent.Up -> {
                 active.remove(e.id)
-                lastReportMs = e.timeMs
-                if (scrollMode) {
-                    if (active.isEmpty()) { scrollMode = false; primary = -1 }
-                    return Output(emptyList())
-                }
                 if (e.id != primary) return Output(emptyList())
+                lastReportMs = e.timeMs
                 lastPos = e.point
                 primary = -1
                 val cmds = when {

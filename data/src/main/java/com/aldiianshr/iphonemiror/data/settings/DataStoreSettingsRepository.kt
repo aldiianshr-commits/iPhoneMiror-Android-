@@ -41,7 +41,7 @@ class DataStoreSettingsRepository(private val context: Context) : SettingsReposi
         val HID_ORIENTATION = stringPreferencesKey("hid_orientation")
         val INVERT_SCROLL = booleanPreferencesKey("invert_scroll")
         val WDA_URL = stringPreferencesKey("wda_url")
-        val TOUCH_INDICATORS = booleanPreferencesKey("touch_indicators")
+        val TOUCH_INDICATORS = booleanPreferencesKey("touch_indicators_v2")
         val TOUCH_STATUS_BAR = booleanPreferencesKey("touch_status_bar")
         val POINTER_SPEED = floatPreferencesKey("pointer_speed")
         val DEBUG = booleanPreferencesKey("debug_logging")
