@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.aldiianshr.iphonemiror.input.HidReportsTest" tests="8" skipped="0" failures="0" errors="0" timestamp="2026-11-04T03:30:26" hostname="runnervm48cm3" time="0.016">
+  <properties/>
+  <testcase name="keyboardIsDeclaredFirst" classname="com.aldiianshr.iphonemiror.input.HidReportsTest" time="0.0"/>
+  <testcase name="keyboardReport" classname="com.aldiianshr.iphonemiror.input.HidReportsTest" time="0.003"/>
+  <testcase name="absMouseReportIsLittleEndian" classname="com.aldiianshr.iphonemiror.input.HidReportsTest" time="0.0"/>
+  <testcase name="splitMovementPreservesTotal" classname="com.aldiianshr.iphonemiror.input.HidReportsTest" time="0.0"/>
+  <testcase name="descriptorCollectionsAreBalanced" classname="com.aldiianshr.iphonemiror.input.HidReportsTest" time="0.001"/>
+  <testcase name="keyMapUsLayout" classname="com.aldiianshr.iphonemiror.input.HidReportsTest" time="0.004"/>
+  <testcase name="mouseReportClampsAndEncodes" classname="com.aldiianshr.iphonemiror.input.HidReportsTest" time="0.0"/>
+  <testcase name="absoluteDescriptorUsesUint16Range" classname="com.aldiianshr.iphonemiror.input.HidReportsTest" time="0.006"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.github.serezhka.airplay.protocol.fairplay.FairPlayVideoCipherTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-11-02T07:04:06" hostname="runnervm48cm3" time="0.033">
+  <properties/>
+  <testcase name="encryptDecryptRoundtripAcrossPacketSizes" classname="com.github.serezhka.airplay.protocol.fairplay.FairPlayVideoCipherTest" time="0.033"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.aldiianshr.iphonemiror.core.BytesTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-11-04T01:40:06" hostname="runnervm7aw5e" time="0.06">
+  <properties/>
+  <testcase name="littleEndianReaders" classname="com.aldiianshr.iphonemiror.core.BytesTest" time="0.009"/>
+  <testcase name="macFormatting" classname="com.aldiianshr.iphonemiror.core.BytesTest" time="0.049"/>
+  <testcase name="hexRoundTrip" classname="com.aldiianshr.iphonemiror.core.BytesTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

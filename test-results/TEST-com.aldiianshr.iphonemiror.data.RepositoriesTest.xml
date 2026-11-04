@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.aldiianshr.iphonemiror.data.RepositoriesTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-11-04T02:39:03" hostname="runnervm48cm3" time="12.619">
+  <properties/>
+  <testcase name="historyLifecycle" classname="com.aldiianshr.iphonemiror.data.RepositoriesTest" time="12.403"/>
+  <testcase name="danglingSessionsAreClosed" classname="com.aldiianshr.iphonemiror.data.RepositoriesTest" time="0.105"/>
+  <testcase name="knownDeviceAllowBlock" classname="com.aldiianshr.iphonemiror.data.RepositoriesTest" time="0.11"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

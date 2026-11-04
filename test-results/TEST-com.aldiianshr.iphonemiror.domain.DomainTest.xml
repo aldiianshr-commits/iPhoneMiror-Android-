@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.aldiianshr.iphonemiror.domain.DomainTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-11-04T02:39:05" hostname="runnervm48cm3" time="0.242">
+  <properties/>
+  <testcase name="linkQuality" classname="com.aldiianshr.iphonemiror.domain.DomainTest" time="0.008"/>
+  <testcase name="compatibilityNeverClaimsVerified" classname="com.aldiianshr.iphonemiror.domain.DomainTest" time="0.031"/>
+  <testcase name="approvalIsNeverSilentForUnknownDevices" classname="com.aldiianshr.iphonemiror.domain.DomainTest" time="0.194"/>
+  <testcase name="modelNames" classname="com.aldiianshr.iphonemiror.domain.DomainTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

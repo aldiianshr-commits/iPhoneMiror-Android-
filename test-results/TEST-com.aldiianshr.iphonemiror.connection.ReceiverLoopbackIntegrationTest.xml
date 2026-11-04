@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.aldiianshr.iphonemiror.connection.ReceiverLoopbackIntegrationTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-11-04T02:38:58" hostname="runnervm48cm3" time="0.886">
+  <properties/>
+  <testcase name="rejectedSenderGets403" classname="com.aldiianshr.iphonemiror.connection.ReceiverLoopbackIntegrationTest" time="0.495"/>
+  <testcase name="fullHandshakeAndEncryptedMirrorStream" classname="com.aldiianshr.iphonemiror.connection.ReceiverLoopbackIntegrationTest" time="0.38"/>
+  <testcase name="persistedIdentityKeepsSamePublicKey" classname="com.aldiianshr.iphonemiror.connection.ReceiverLoopbackIntegrationTest" time="0.009"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

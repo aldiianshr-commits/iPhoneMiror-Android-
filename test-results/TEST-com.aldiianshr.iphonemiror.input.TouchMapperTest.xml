@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.aldiianshr.iphonemiror.input.TouchMapperTest" tests="8" skipped="0" failures="0" errors="0" timestamp="2026-11-04T03:30:26" hostname="runnervm48cm3" time="0.008">
+  <properties/>
+  <testcase name="portraitPhoneInLandscapeTabletIsPillarboxed" classname="com.aldiianshr.iphonemiror.input.TouchMapperTest" time="0.002"/>
+  <testcase name="hidAbsoluteMappingAndRotation" classname="com.aldiianshr.iphonemiror.input.TouchMapperTest" time="0.0"/>
+  <testcase name="stretchFillsWholeView" classname="com.aldiianshr.iphonemiror.input.TouchMapperTest" time="0.0"/>
+  <testcase name="pointsFollowWindowOrientation" classname="com.aldiianshr.iphonemiror.input.TouchMapperTest" time="0.0"/>
+  <testcase name="landscapePhoneInPortraitTabletIsLetterboxed" classname="com.aldiianshr.iphonemiror.input.TouchMapperTest" time="0.0"/>
+  <testcase name="zoomAndPanAreInverted" classname="com.aldiianshr.iphonemiror.input.TouchMapperTest" time="0.0"/>
+  <testcase name="fillCropsAndStillMapsExactly" classname="com.aldiianshr.iphonemiror.input.TouchMapperTest" time="0.001"/>
+  <testcase name="clampKeepsDragsOnScreen" classname="com.aldiianshr.iphonemiror.input.TouchMapperTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

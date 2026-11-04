@@ -1,0 +1,20 @@
+ok    airplay-protocol     com.github.serezhka.airplay.protocol.FairPlaySessionPairingTest: 2 tests, 0 failures, 0 errors, 0 skipped
+ok    airplay-protocol     com.github.serezhka.airplay.protocol.X25519Test: 4 tests, 0 failures, 0 errors, 0 skipped
+ok    airplay-protocol     com.github.serezhka.airplay.protocol.fairplay.FairPlayVideoCipherTest: 1 tests, 0 failures, 0 errors, 0 skipped
+ok    airplay-protocol     com.github.serezhka.airplay.protocol.fairplay.SapKeyScheduleTest: 6 tests, 0 failures, 0 errors, 0 skipped
+ok    connection           com.aldiianshr.iphonemiror.connection.AirPlayProfileTest: 7 tests, 0 failures, 0 errors, 0 skipped
+ok    connection           com.aldiianshr.iphonemiror.connection.ReceiverLoopbackIntegrationTest: 3 tests, 0 failures, 0 errors, 0 skipped
+ok    connection           com.aldiianshr.iphonemiror.connection.RtspCodecTest: 4 tests, 0 failures, 0 errors, 0 skipped
+ok    core                 com.aldiianshr.iphonemiror.core.BytesTest: 3 tests, 0 failures, 0 errors, 0 skipped
+ok    data                 com.aldiianshr.iphonemiror.data.RepositoriesTest: 3 tests, 0 failures, 0 errors, 0 skipped
+ok    device-discovery     com.aldiianshr.iphonemiror.discovery.DiscoveryTest: 2 tests, 0 failures, 0 errors, 0 skipped
+ok    domain               com.aldiianshr.iphonemiror.domain.DomainTest: 4 tests, 0 failures, 0 errors, 0 skipped
+ok    input-controller     com.aldiianshr.iphonemiror.input.GestureAndTranslatorTest: 7 tests, 0 failures, 0 errors, 0 skipped
+ok    input-controller     com.aldiianshr.iphonemiror.input.HidReportsTest: 8 tests, 0 failures, 0 errors, 0 skipped
+ok    input-controller     com.aldiianshr.iphonemiror.input.TouchMapperTest: 8 tests, 0 failures, 0 errors, 0 skipped
+ok    input-controller     com.aldiianshr.iphonemiror.input.WdaProbeTest: 2 tests, 0 failures, 0 errors, 0 skipped
+ok    input-controller     com.aldiianshr.iphonemiror.input.WdaUrlParsingTest: 3 tests, 0 failures, 0 errors, 0 skipped
+ok    input-controller     com.aldiianshr.iphonemiror.input.WebDriverAgentTest: 3 tests, 0 failures, 0 errors, 0 skipped
+ok    mirroring            com.aldiianshr.iphonemiror.mirroring.MirroringTest: 6 tests, 0 failures, 0 errors, 0 skipped
+
+TOTAL: 76 tests, 0 failures, 0 errors, 0 skipped

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.github.serezhka.airplay.protocol.FairPlaySessionPairingTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-11-02T07:04:06" hostname="runnervm48cm3" time="0.246">
+  <properties/>
+  <testcase name="pairingTest" classname="com.github.serezhka.airplay.protocol.FairPlaySessionPairingTest" time="0.24"/>
+  <testcase name="advertisedKeyMatchesPairSetup" classname="com.github.serezhka.airplay.protocol.FairPlaySessionPairingTest" time="0.005"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

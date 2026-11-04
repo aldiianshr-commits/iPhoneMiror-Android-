@@ -1,0 +1,709 @@
+Starting a Gradle Daemon (subsequent builds will be faster)
+> Task :connection:preBuild UP-TO-DATE
+> Task :domain:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :connection:preDebugBuild UP-TO-DATE
+> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :connection:writeDebugAarMetadata
+> Task :core:preBuild UP-TO-DATE
+> Task :core:preDebugBuild UP-TO-DATE
+> Task :core:writeDebugAarMetadata
+> Task :data:preBuild UP-TO-DATE
+> Task :data:preDebugBuild UP-TO-DATE
+> Task :airplay-protocol:compileJava FROM-CACHE
+> Task :data:writeDebugAarMetadata
+> Task :device-discovery:preBuild UP-TO-DATE
+> Task :device-discovery:preDebugBuild UP-TO-DATE
+> Task :app:generateDebugBuildConfig
+> Task :domain:compileKotlin FROM-CACHE
+> Task :input-controller:preBuild UP-TO-DATE
+> Task :input-controller:preDebugBuild UP-TO-DATE
+> Task :domain:compileJava NO-SOURCE
+> Task :input-controller:writeDebugAarMetadata
+> Task :mirroring:preBuild UP-TO-DATE
+> Task :mirroring:preDebugBuild UP-TO-DATE
+> Task :domain:processResources NO-SOURCE
+> Task :domain:classes UP-TO-DATE
+> Task :device-discovery:writeDebugAarMetadata
+> Task :app:generateDebugResValues FROM-CACHE
+> Task :connection:generateDebugResValues FROM-CACHE
+> Task :mirroring:writeDebugAarMetadata
+> Task :connection:generateDebugResources FROM-CACHE
+> Task :airplay-protocol:processResources
+> Task :airplay-protocol:classes
+> Task :connection:packageDebugResources FROM-CACHE
+> Task :core:generateDebugResValues FROM-CACHE
+> Task :core:generateDebugResources FROM-CACHE
+> Task :core:packageDebugResources FROM-CACHE
+> Task :domain:jar
+> Task :data:generateDebugResValues FROM-CACHE
+> Task :data:generateDebugResources FROM-CACHE
+> Task :airplay-protocol:jar
+> Task :data:packageDebugResources FROM-CACHE
+> Task :device-discovery:generateDebugResValues FROM-CACHE
+> Task :input-controller:generateDebugResValues FROM-CACHE
+> Task :mirroring:generateDebugResValues FROM-CACHE
+> Task :device-discovery:generateDebugResources FROM-CACHE
+> Task :input-controller:generateDebugResources FROM-CACHE
+> Task :mirroring:generateDebugResources FROM-CACHE
+> Task :input-controller:packageDebugResources FROM-CACHE
+> Task :device-discovery:packageDebugResources FROM-CACHE
+> Task :connection:extractDeepLinksDebug FROM-CACHE
+> Task :core:extractDeepLinksDebug FROM-CACHE
+> Task :mirroring:packageDebugResources FROM-CACHE
+> Task :data:extractDeepLinksDebug FROM-CACHE
+> Task :core:processDebugManifest FROM-CACHE
+> Task :device-discovery:extractDeepLinksDebug FROM-CACHE
+> Task :connection:processDebugManifest FROM-CACHE
+> Task :device-discovery:processDebugManifest FROM-CACHE
+> Task :input-controller:extractDeepLinksDebug FROM-CACHE
+> Task :mirroring:extractDeepLinksDebug FROM-CACHE
+> Task :mirroring:processDebugManifest FROM-CACHE
+> Task :input-controller:processDebugManifest FROM-CACHE
+> Task :data:processDebugManifest FROM-CACHE
+> Task :core:compileDebugLibraryResources FROM-CACHE
+> Task :data:compileDebugLibraryResources FROM-CACHE
+> Task :connection:compileDebugLibraryResources FROM-CACHE
+> Task :connection:parseDebugLocalResources FROM-CACHE
+> Task :data:parseDebugLocalResources FROM-CACHE
+> Task :core:parseDebugLocalResources FROM-CACHE
+> Task :core:generateDebugRFile FROM-CACHE
+> Task :device-discovery:compileDebugLibraryResources FROM-CACHE
+> Task :connection:generateDebugRFile FROM-CACHE
+> Task :data:generateDebugRFile FROM-CACHE
+> Task :device-discovery:parseDebugLocalResources FROM-CACHE
+> Task :mirroring:compileDebugLibraryResources FROM-CACHE
+> Task :input-controller:compileDebugLibraryResources FROM-CACHE
+> Task :input-controller:parseDebugLocalResources FROM-CACHE
+> Task :mirroring:parseDebugLocalResources FROM-CACHE
+> Task :device-discovery:generateDebugRFile FROM-CACHE
+> Task :connection:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :core:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :mirroring:generateDebugRFile FROM-CACHE
+> Task :device-discovery:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :input-controller:generateDebugRFile FROM-CACHE
+> Task :connection:javaPreCompileDebug FROM-CACHE
+> Task :device-discovery:javaPreCompileDebug FROM-CACHE
+> Task :data:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :input-controller:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :input-controller:javaPreCompileDebug FROM-CACHE
+> Task :mirroring:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :mirroring:javaPreCompileDebug FROM-CACHE
+> Task :data:javaPreCompileDebug FROM-CACHE
+> Task :connection:mergeDebugShaders
+> Task :data:mergeDebugShaders
+> Task :connection:compileDebugShaders NO-SOURCE
+> Task :connection:generateDebugAssets UP-TO-DATE
+> Task :core:compileDebugKotlin FROM-CACHE
+> Task :core:javaPreCompileDebug FROM-CACHE
+> Task :core:compileDebugJavaWithJavac NO-SOURCE
+> Task :connection:packageDebugAssets
+> Task :app:checkDebugAarMetadata
+> Task :data:compileDebugShaders NO-SOURCE
+> Task :data:generateDebugAssets UP-TO-DATE
+> Task :core:mergeDebugShaders
+> Task :core:compileDebugShaders NO-SOURCE
+> Task :core:generateDebugAssets UP-TO-DATE
+> Task :core:packageDebugAssets
+> Task :data:packageDebugAssets
+> Task :device-discovery:mergeDebugShaders
+> Task :app:mapDebugSourceSetPaths
+> Task :core:bundleLibCompileToJarDebug
+> Task :device-discovery:compileDebugShaders NO-SOURCE
+> Task :input-controller:mergeDebugShaders
+> Task :app:generateDebugResources FROM-CACHE
+> Task :device-discovery:compileDebugKotlin FROM-CACHE
+> Task :device-discovery:compileDebugJavaWithJavac NO-SOURCE
+> Task :app:mergeDebugResources FROM-CACHE
+> Task :device-discovery:bundleLibCompileToJarDebug
+> Task :app:packageDebugResources FROM-CACHE
+> Task :app:parseDebugLocalResources FROM-CACHE
+> Task :app:createDebugCompatibleScreenManifests
+> Task :app:extractDeepLinksDebug FROM-CACHE
+> Task :connection:compileDebugKotlin FROM-CACHE
+> Task :connection:compileDebugJavaWithJavac NO-SOURCE
+> Task :connection:bundleLibCompileToJarDebug
+> Task :mirroring:compileDebugKotlin FROM-CACHE
+> Task :mirroring:compileDebugJavaWithJavac NO-SOURCE
+> Task :mirroring:bundleLibCompileToJarDebug
+> Task :device-discovery:generateDebugAssets UP-TO-DATE
+> Task :device-discovery:packageDebugAssets
+> Task :mirroring:mergeDebugShaders
+> Task :mirroring:compileDebugShaders NO-SOURCE
+> Task :mirroring:generateDebugAssets UP-TO-DATE
+> Task :mirroring:packageDebugAssets
+> Task :connection:bundleLibRuntimeToJarDebug
+> Task :mirroring:bundleLibRuntimeToJarDebug
+> Task :device-discovery:bundleLibRuntimeToJarDebug
+> Task :core:bundleLibRuntimeToJarDebug
+> Task :connection:processDebugJavaRes
+> Task :core:processDebugJavaRes
+> Task :input-controller:compileDebugShaders NO-SOURCE
+> Task :input-controller:generateDebugAssets UP-TO-DATE
+> Task :input-controller:packageDebugAssets
+> Task :device-discovery:processDebugJavaRes
+> Task :mirroring:processDebugJavaRes
+> Task :app:processDebugMainManifest
+> Task :connection:bundleLibRuntimeToDirDebug
+> Task :mirroring:bundleLibRuntimeToDirDebug
+> Task :data:kspDebugKotlin FROM-CACHE
+> Task :device-discovery:bundleLibRuntimeToDirDebug
+> Task :data:compileDebugKotlin FROM-CACHE
+> Task :app:processDebugManifest
+> Task :core:bundleLibRuntimeToDirDebug
+> Task :app:javaPreCompileDebug FROM-CACHE
+> Task :app:mergeDebugShaders
+> Task :app:compileDebugShaders NO-SOURCE
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :app:mergeDebugAssets
+> Task :app:compressDebugAssets FROM-CACHE
+> Task :app:processDebugManifestForPackage
+> Task :connection:mergeDebugJniLibFolders
+> Task :connection:mergeDebugNativeLibs NO-SOURCE
+> Task :connection:copyDebugJniLibsProjectOnly
+> Task :core:mergeDebugJniLibFolders
+> Task :core:mergeDebugNativeLibs NO-SOURCE
+> Task :core:copyDebugJniLibsProjectOnly
+> Task :device-discovery:mergeDebugJniLibFolders
+> Task :device-discovery:mergeDebugNativeLibs NO-SOURCE
+> Task :device-discovery:copyDebugJniLibsProjectOnly
+> Task :input-controller:mergeDebugJniLibFolders
+> Task :input-controller:mergeDebugNativeLibs NO-SOURCE
+> Task :input-controller:copyDebugJniLibsProjectOnly
+> Task :mirroring:mergeDebugJniLibFolders
+> Task :mirroring:mergeDebugNativeLibs NO-SOURCE
+> Task :mirroring:copyDebugJniLibsProjectOnly
+> Task :connection:stripDebugDebugSymbols NO-SOURCE
+> Task :connection:copyDebugJniLibsProjectAndLocalJars
+> Task :data:compileDebugJavaWithJavac FROM-CACHE
+> Task :data:bundleLibCompileToJarDebug
+> Task :data:bundleLibRuntimeToJarDebug
+> Task :app:desugarDebugFileDependencies FROM-CACHE
+> Task :data:processDebugJavaRes
+> Task :app:processDebugResources
+> Task :data:bundleLibRuntimeToDirDebug
+> Task :data:mergeDebugJniLibFolders
+> Task :connection:extractDebugAnnotations FROM-CACHE
+> Task :data:mergeDebugNativeLibs NO-SOURCE
+> Task :connection:extractDeepLinksForAarDebug FROM-CACHE
+> Task :data:copyDebugJniLibsProjectOnly
+> Task :app:mergeDebugJniLibFolders
+> Task :connection:mergeDebugGeneratedProguardFiles
+> Task :connection:mergeDebugConsumerProguardFiles
+> Task :connection:prepareDebugArtProfile
+> Task :app:checkDebugDuplicateClasses
+> Task :connection:prepareLintJarForPublish
+> Task :core:stripDebugDebugSymbols NO-SOURCE
+> Task :core:copyDebugJniLibsProjectAndLocalJars
+> Task :connection:mergeDebugJavaResource
+> Task :app:mergeDebugNativeLibs
+> Task :connection:syncDebugLibJars FROM-CACHE
+> Task :core:extractDebugAnnotations FROM-CACHE
+> Task :connection:bundleDebugAar
+> Task :connection:assembleDebug
+> Task :data:stripDebugDebugSymbols NO-SOURCE
+> Task :core:extractDeepLinksForAarDebug FROM-CACHE
+> Task :data:copyDebugJniLibsProjectAndLocalJars
+> Task :core:mergeDebugGeneratedProguardFiles
+> Task :core:mergeDebugConsumerProguardFiles
+> Task :core:prepareDebugArtProfile
+> Task :core:prepareLintJarForPublish
+> Task :data:extractDebugAnnotations FROM-CACHE
+> Task :data:extractDeepLinksForAarDebug FROM-CACHE
+> Task :core:mergeDebugJavaResource
+> Task :data:mergeDebugGeneratedProguardFiles
+> Task :data:mergeDebugConsumerProguardFiles
+> Task :core:syncDebugLibJars FROM-CACHE
+> Task :data:prepareDebugArtProfile
+> Task :data:prepareLintJarForPublish
+> Task :core:bundleDebugAar
+> Task :core:assembleDebug
+> Task :device-discovery:stripDebugDebugSymbols NO-SOURCE
+> Task :data:mergeDebugJavaResource
+> Task :device-discovery:copyDebugJniLibsProjectAndLocalJars
+> Task :data:syncDebugLibJars FROM-CACHE
+> Task :data:bundleDebugAar
+> Task :data:assembleDebug
+> Task :input-controller:stripDebugDebugSymbols NO-SOURCE
+> Task :input-controller:copyDebugJniLibsProjectAndLocalJars
+> Task :input-controller:extractDeepLinksForAarDebug FROM-CACHE
+> Task :input-controller:prepareDebugArtProfile
+> Task :input-controller:prepareLintJarForPublish
+> Task :device-discovery:extractDebugAnnotations FROM-CACHE
+> Task :mirroring:stripDebugDebugSymbols NO-SOURCE
+> Task :device-discovery:extractDeepLinksForAarDebug FROM-CACHE
+> Task :mirroring:copyDebugJniLibsProjectAndLocalJars
+> Task :device-discovery:mergeDebugGeneratedProguardFiles
+> Task :device-discovery:mergeDebugConsumerProguardFiles
+> Task :device-discovery:prepareDebugArtProfile
+> Task :device-discovery:prepareLintJarForPublish
+> Task :device-discovery:mergeDebugJavaResource
+> Task :device-discovery:syncDebugLibJars FROM-CACHE
+> Task :device-discovery:bundleDebugAar
+> Task :device-discovery:assembleDebug
+> Task :connection:preReleaseBuild UP-TO-DATE
+> Task :mirroring:extractDebugAnnotations FROM-CACHE
+> Task :connection:writeReleaseAarMetadata
+> Task :core:preReleaseBuild UP-TO-DATE
+> Task :mirroring:extractDeepLinksForAarDebug FROM-CACHE
+> Task :mirroring:mergeDebugGeneratedProguardFiles
+> Task :mirroring:mergeDebugConsumerProguardFiles
+> Task :core:writeReleaseAarMetadata
+> Task :data:preReleaseBuild UP-TO-DATE
+> Task :mirroring:prepareDebugArtProfile
+> Task :data:writeReleaseAarMetadata
+> Task :device-discovery:preReleaseBuild UP-TO-DATE
+> Task :mirroring:prepareLintJarForPublish
+> Task :device-discovery:writeReleaseAarMetadata
+> Task :input-controller:preReleaseBuild UP-TO-DATE
+> Task :input-controller:writeReleaseAarMetadata
+> Task :mirroring:preReleaseBuild UP-TO-DATE
+> Task :mirroring:mergeDebugJavaResource
+> Task :connection:generateReleaseResValues FROM-CACHE
+> Task :connection:generateReleaseResources FROM-CACHE
+> Task :mirroring:syncDebugLibJars FROM-CACHE
+> Task :connection:packageReleaseResources FROM-CACHE
+> Task :core:generateReleaseResValues FROM-CACHE
+> Task :mirroring:bundleDebugAar
+> Task :mirroring:assembleDebug
+> Task :core:generateReleaseResources FROM-CACHE
+> Task :mirroring:writeReleaseAarMetadata
+> Task :data:generateReleaseResValues FROM-CACHE
+> Task :data:generateReleaseResources FROM-CACHE
+> Task :core:packageReleaseResources FROM-CACHE
+> Task :device-discovery:generateReleaseResValues FROM-CACHE
+> Task :device-discovery:generateReleaseResources FROM-CACHE
+> Task :data:packageReleaseResources FROM-CACHE
+> Task :input-controller:generateReleaseResValues FROM-CACHE
+> Task :input-controller:generateReleaseResources FROM-CACHE
+> Task :device-discovery:packageReleaseResources FROM-CACHE
+> Task :mirroring:generateReleaseResValues FROM-CACHE
+> Task :input-controller:packageReleaseResources FROM-CACHE
+> Task :mirroring:generateReleaseResources FROM-CACHE
+> Task :connection:extractDeepLinksRelease FROM-CACHE
+> Task :mirroring:packageReleaseResources FROM-CACHE
+> Task :connection:processReleaseManifest FROM-CACHE
+> Task :core:extractDeepLinksRelease FROM-CACHE
+> Task :data:extractDeepLinksRelease FROM-CACHE
+> Task :core:processReleaseManifest FROM-CACHE
+> Task :data:processReleaseManifest FROM-CACHE
+> Task :device-discovery:extractDeepLinksRelease FROM-CACHE
+> Task :input-controller:extractDeepLinksRelease FROM-CACHE
+> Task :device-discovery:processReleaseManifest FROM-CACHE
+> Task :input-controller:processReleaseManifest FROM-CACHE
+> Task :mirroring:extractDeepLinksRelease FROM-CACHE
+> Task :connection:parseReleaseLocalResources FROM-CACHE
+> Task :mirroring:processReleaseManifest FROM-CACHE
+> Task :core:parseReleaseLocalResources FROM-CACHE
+> Task :connection:generateReleaseRFile FROM-CACHE
+> Task :core:generateReleaseRFile FROM-CACHE
+> Task :device-discovery:parseReleaseLocalResources FROM-CACHE
+> Task :data:parseReleaseLocalResources FROM-CACHE
+> Task :device-discovery:generateReleaseRFile FROM-CACHE
+> Task :data:generateReleaseRFile FROM-CACHE
+> Task :mirroring:parseReleaseLocalResources FROM-CACHE
+> Task :input-controller:parseReleaseLocalResources FROM-CACHE
+> Task :mirroring:generateReleaseRFile FROM-CACHE
+> Task :input-controller:generateReleaseRFile FROM-CACHE
+> Task :device-discovery:javaPreCompileRelease FROM-CACHE
+> Task :connection:javaPreCompileRelease FROM-CACHE
+> Task :data:javaPreCompileRelease FROM-CACHE
+> Task :input-controller:javaPreCompileRelease FROM-CACHE
+> Task :app:mergeExtDexDebug FROM-CACHE
+> Task :mirroring:javaPreCompileRelease FROM-CACHE
+> Task :connection:extractProguardFiles
+> Task :core:compileReleaseKotlin FROM-CACHE
+> Task :core:javaPreCompileRelease FROM-CACHE
+> Task :core:compileReleaseJavaWithJavac NO-SOURCE
+> Task :core:bundleLibCompileToJarRelease
+
+> Task :app:stripDebugDebugSymbols
+Unable to strip the following libraries, packaging them as they are: libandroidx.graphics.path.so, libdatastore_shared_counter.so.
+
+> Task :device-discovery:compileReleaseKotlin FROM-CACHE
+> Task :device-discovery:compileReleaseJavaWithJavac NO-SOURCE
+> Task :device-discovery:bundleLibCompileToJarRelease
+> Task :data:kspReleaseKotlin FROM-CACHE
+> Task :connection:compileReleaseKotlin FROM-CACHE
+> Task :connection:compileReleaseJavaWithJavac NO-SOURCE
+> Task :data:compileReleaseKotlin FROM-CACHE
+> Task :connection:bundleLibCompileToJarRelease
+> Task :data:compileReleaseJavaWithJavac FROM-CACHE
+> Task :data:bundleLibCompileToJarRelease
+> Task :mirroring:compileReleaseKotlin FROM-CACHE
+> Task :mirroring:compileReleaseJavaWithJavac NO-SOURCE
+> Task :mirroring:bundleLibCompileToJarRelease
+> Task :data:bundleLibRuntimeToJarRelease
+> Task :connection:bundleLibRuntimeToJarRelease
+> Task :mirroring:bundleLibRuntimeToJarRelease
+> Task :device-discovery:bundleLibRuntimeToJarRelease
+> Task :core:bundleLibRuntimeToJarRelease
+> Task :connection:processReleaseJavaRes
+> Task :connection:createFullJarRelease
+> Task :core:processReleaseJavaRes
+> Task :core:createFullJarRelease
+> Task :core:extractProguardFiles
+> Task :core:generateReleaseLintModel
+> Task :device-discovery:processReleaseJavaRes
+> Task :device-discovery:createFullJarRelease
+> Task :device-discovery:extractProguardFiles
+> Task :device-discovery:generateReleaseLintModel
+> Task :connection:generateReleaseLintModel
+> Task :data:processReleaseJavaRes
+> Task :data:createFullJarRelease
+> Task :data:extractProguardFiles
+> Task :data:generateReleaseLintModel
+> Task :input-controller:extractProguardFiles
+> Task :mirroring:processReleaseJavaRes
+> Task :mirroring:createFullJarRelease
+> Task :mirroring:extractProguardFiles
+> Task :app:validateSigningDebug
+> Task :mirroring:generateReleaseLintModel
+> Task :app:writeDebugAppMetadata
+> Task :data:mergeReleaseJniLibFolders
+> Task :data:mergeReleaseNativeLibs NO-SOURCE
+> Task :data:stripReleaseDebugSymbols NO-SOURCE
+> Task :data:copyReleaseJniLibsProjectAndLocalJars
+> Task :data:extractDeepLinksForAarRelease FROM-CACHE
+> Task :data:extractReleaseAnnotations FROM-CACHE
+> Task :app:writeDebugSigningConfigVersions
+> Task :data:mergeReleaseGeneratedProguardFiles
+> Task :data:mergeReleaseConsumerProguardFiles
+> Task :data:mergeReleaseShaders
+> Task :data:compileReleaseShaders NO-SOURCE
+> Task :data:generateReleaseAssets UP-TO-DATE
+> Task :data:packageReleaseAssets
+> Task :data:prepareReleaseArtProfile
+> Task :data:mergeReleaseJavaResource
+> Task :app:buildKotlinToolingMetadata
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:generateReleaseBuildConfig
+> Task :data:syncReleaseLibJars FROM-CACHE
+> Task :data:bundleReleaseLocalLintAar
+> Task :connection:mergeReleaseJniLibFolders
+> Task :app:generateReleaseResValues FROM-CACHE
+> Task :app:checkReleaseAarMetadata
+> Task :connection:mergeReleaseNativeLibs NO-SOURCE
+> Task :connection:stripReleaseDebugSymbols NO-SOURCE
+> Task :app:mapReleaseSourceSetPaths
+> Task :connection:copyReleaseJniLibsProjectAndLocalJars
+> Task :app:generateReleaseResources FROM-CACHE
+> Task :connection:extractDeepLinksForAarRelease FROM-CACHE
+> Task :connection:extractReleaseAnnotations FROM-CACHE
+> Task :connection:mergeReleaseGeneratedProguardFiles
+> Task :connection:mergeReleaseConsumerProguardFiles
+> Task :connection:mergeReleaseShaders
+> Task :connection:compileReleaseShaders NO-SOURCE
+> Task :connection:generateReleaseAssets UP-TO-DATE
+> Task :connection:packageReleaseAssets
+> Task :connection:prepareReleaseArtProfile
+> Task :connection:mergeReleaseJavaResource
+> Task :connection:syncReleaseLibJars FROM-CACHE
+> Task :connection:bundleReleaseLocalLintAar
+> Task :mirroring:mergeReleaseJniLibFolders
+> Task :mirroring:mergeReleaseNativeLibs NO-SOURCE
+> Task :mirroring:stripReleaseDebugSymbols NO-SOURCE
+> Task :mirroring:copyReleaseJniLibsProjectAndLocalJars
+> Task :mirroring:extractDeepLinksForAarRelease FROM-CACHE
+> Task :mirroring:extractReleaseAnnotations FROM-CACHE
+> Task :mirroring:mergeReleaseGeneratedProguardFiles
+> Task :app:mergeReleaseResources FROM-CACHE
+> Task :mirroring:mergeReleaseConsumerProguardFiles
+> Task :app:packageReleaseResources FROM-CACHE
+> Task :mirroring:mergeReleaseShaders
+> Task :mirroring:compileReleaseShaders NO-SOURCE
+> Task :app:parseReleaseLocalResources FROM-CACHE
+> Task :mirroring:generateReleaseAssets UP-TO-DATE
+> Task :mirroring:packageReleaseAssets
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :mirroring:prepareReleaseArtProfile
+> Task :app:extractDeepLinksRelease FROM-CACHE
+> Task :mirroring:mergeReleaseJavaResource
+> Task :mirroring:syncReleaseLibJars FROM-CACHE
+> Task :mirroring:bundleReleaseLocalLintAar
+> Task :device-discovery:mergeReleaseJniLibFolders
+> Task :device-discovery:mergeReleaseNativeLibs NO-SOURCE
+> Task :device-discovery:stripReleaseDebugSymbols NO-SOURCE
+> Task :device-discovery:copyReleaseJniLibsProjectAndLocalJars
+> Task :device-discovery:extractDeepLinksForAarRelease FROM-CACHE
+> Task :device-discovery:extractReleaseAnnotations FROM-CACHE
+> Task :device-discovery:mergeReleaseGeneratedProguardFiles
+> Task :device-discovery:mergeReleaseConsumerProguardFiles
+> Task :device-discovery:mergeReleaseShaders
+> Task :device-discovery:compileReleaseShaders NO-SOURCE
+> Task :device-discovery:generateReleaseAssets UP-TO-DATE
+> Task :device-discovery:packageReleaseAssets
+> Task :device-discovery:prepareReleaseArtProfile
+> Task :device-discovery:mergeReleaseJavaResource
+> Task :device-discovery:syncReleaseLibJars FROM-CACHE
+> Task :device-discovery:bundleReleaseLocalLintAar
+> Task :app:processReleaseMainManifest
+> Task :app:processReleaseManifest
+> Task :input-controller:mergeReleaseJniLibFolders
+> Task :app:javaPreCompileRelease FROM-CACHE
+> Task :app:processReleaseManifestForPackage
+> Task :input-controller:mergeReleaseNativeLibs NO-SOURCE
+> Task :input-controller:stripReleaseDebugSymbols NO-SOURCE
+> Task :input-controller:copyReleaseJniLibsProjectAndLocalJars
+> Task :input-controller:extractDeepLinksForAarRelease FROM-CACHE
+> Task :input-controller:mergeReleaseShaders
+> Task :input-controller:compileReleaseShaders NO-SOURCE
+> Task :input-controller:generateReleaseAssets UP-TO-DATE
+> Task :input-controller:packageReleaseAssets
+> Task :input-controller:prepareReleaseArtProfile
+> Task :core:mergeReleaseJniLibFolders
+> Task :core:mergeReleaseNativeLibs NO-SOURCE
+> Task :app:extractProguardFiles
+> Task :core:stripReleaseDebugSymbols NO-SOURCE
+> Task :core:copyReleaseJniLibsProjectAndLocalJars
+> Task :core:extractDeepLinksForAarRelease FROM-CACHE
+> Task :core:extractReleaseAnnotations FROM-CACHE
+> Task :core:mergeReleaseGeneratedProguardFiles
+> Task :core:mergeReleaseConsumerProguardFiles
+> Task :core:mergeReleaseShaders
+> Task :core:compileReleaseShaders NO-SOURCE
+> Task :core:generateReleaseAssets UP-TO-DATE
+> Task :core:packageReleaseAssets
+> Task :core:prepareReleaseArtProfile
+> Task :core:mergeReleaseJavaResource
+> Task :core:syncReleaseLibJars FROM-CACHE
+> Task :core:bundleReleaseLocalLintAar
+> Task :core:writeReleaseLintModelMetadata
+> Task :device-discovery:writeReleaseLintModelMetadata
+> Task :connection:lintVitalAnalyzeRelease FROM-CACHE
+> Task :connection:writeReleaseLintModelMetadata
+> Task :core:lintVitalAnalyzeRelease FROM-CACHE
+> Task :data:lintVitalAnalyzeRelease FROM-CACHE
+> Task :data:writeReleaseLintModelMetadata
+> Task :device-discovery:lintVitalAnalyzeRelease FROM-CACHE
+> Task :input-controller:writeReleaseLintModelMetadata
+> Task :mirroring:lintVitalAnalyzeRelease FROM-CACHE
+> Task :mirroring:writeReleaseLintModelMetadata
+> Task :connection:generateReleaseLintVitalModel
+> Task :core:generateReleaseLintVitalModel
+> Task :app:processReleaseResources
+> Task :data:generateReleaseLintVitalModel
+> Task :device-discovery:generateReleaseLintVitalModel
+> Task :app:mergeReleaseJniLibFolders
+> Task :connection:copyReleaseJniLibsProjectOnly
+> Task :mirroring:generateReleaseLintVitalModel
+> Task :core:copyReleaseJniLibsProjectOnly
+> Task :data:copyReleaseJniLibsProjectOnly
+> Task :device-discovery:copyReleaseJniLibsProjectOnly
+> Task :input-controller:copyReleaseJniLibsProjectOnly
+> Task :mirroring:copyReleaseJniLibsProjectOnly
+> Task :data:exportReleaseConsumerProguardFiles
+> Task :connection:exportReleaseConsumerProguardFiles
+> Task :mirroring:exportReleaseConsumerProguardFiles
+> Task :device-discovery:exportReleaseConsumerProguardFiles
+> Task :app:mergeReleaseNativeLibs
+> Task :core:exportReleaseConsumerProguardFiles
+
+> Task :app:stripReleaseDebugSymbols
+Unable to strip the following libraries, packaging them as they are: libandroidx.graphics.path.so, libdatastore_shared_counter.so.
+
+> Task :app:extractReleaseNativeSymbolTables FROM-CACHE
+> Task :app:mergeReleaseNativeDebugMetadata NO-SOURCE
+> Task :app:checkReleaseDuplicateClasses
+> Task :connection:bundleReleaseAar
+> Task :app:mergeReleaseStartupProfile
+> Task :app:mergeReleaseArtProfile
+> Task :app:mergeReleaseShaders
+> Task :connection:mapReleaseSourceSetPaths
+> Task :app:compileReleaseShaders NO-SOURCE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseAssets
+> Task :app:compressReleaseAssets FROM-CACHE
+> Task :connection:mergeReleaseResources FROM-CACHE
+> Task :core:compileReleaseLibraryResources FROM-CACHE
+> Task :device-discovery:compileReleaseLibraryResources FROM-CACHE
+> Task :app:extractReleaseVersionControlInfo
+> Task :connection:verifyReleaseResources FROM-CACHE
+> Task :connection:assembleRelease
+> Task :core:bundleReleaseAar
+> Task :app:collectReleaseDependencies
+> Task :app:sdkReleaseDependencyData
+> Task :core:mapReleaseSourceSetPaths
+> Task :app:convertLinkedResourcesToProtoRelease
+> Task :app:validateSigningRelease
+> Task :app:writeReleaseAppMetadata
+> Task :app:writeReleaseSigningConfigVersions
+> Task :data:bundleReleaseAar
+> Task :data:mapReleaseSourceSetPaths
+> Task :core:mergeReleaseResources FROM-CACHE
+> Task :core:verifyReleaseResources FROM-CACHE
+> Task :core:assembleRelease
+> Task :device-discovery:bundleReleaseAar
+> Task :data:mergeReleaseResources FROM-CACHE
+> Task :device-discovery:mapReleaseSourceSetPaths
+> Task :data:verifyReleaseResources FROM-CACHE
+> Task :data:assembleRelease
+> Task :input-controller:mapReleaseSourceSetPaths
+> Task :device-discovery:mergeReleaseResources FROM-CACHE
+> Task :device-discovery:verifyReleaseResources FROM-CACHE
+> Task :device-discovery:assembleRelease
+> Task :mirroring:bundleReleaseAar
+> Task :mirroring:mapReleaseSourceSetPaths
+> Task :input-controller:mergeReleaseResources FROM-CACHE
+> Task :input-controller:verifyReleaseResources FROM-CACHE
+> Task :app:preDebugUnitTestBuild UP-TO-DATE
+> Task :app:packageDebugUnitTestForUnitTest
+> Task :app:generateDebugUnitTestConfig
+> Task :mirroring:mergeReleaseResources FROM-CACHE
+> Task :app:javaPreCompileDebugUnitTest FROM-CACHE
+> Task :connection:preDebugUnitTestBuild UP-TO-DATE
+> Task :mirroring:verifyReleaseResources FROM-CACHE
+> Task :mirroring:assembleRelease
+> Task :core:preDebugUnitTestBuild UP-TO-DATE
+> Task :connection:generateDebugUnitTestStubRFile FROM-CACHE
+> Task :core:generateDebugUnitTestStubRFile FROM-CACHE
+> Task :core:compileDebugUnitTestKotlin FROM-CACHE
+> Task :connection:compileDebugUnitTestKotlin FROM-CACHE
+> Task :core:javaPreCompileDebugUnitTest FROM-CACHE
+> Task :connection:javaPreCompileDebugUnitTest FROM-CACHE
+> Task :core:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :connection:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :core:processDebugUnitTestJavaRes
+> Task :connection:processDebugUnitTestJavaRes
+> Task :connection:testDebugUnitTest FROM-CACHE
+> Task :data:preDebugUnitTestBuild UP-TO-DATE
+> Task :core:testDebugUnitTest FROM-CACHE
+> Task :device-discovery:preDebugUnitTestBuild UP-TO-DATE
+> Task :device-discovery:generateDebugUnitTestStubRFile FROM-CACHE
+> Task :data:checkDebugUnitTestAarMetadata
+> Task :data:generateDebugUnitTestResValues FROM-CACHE
+> Task :device-discovery:compileDebugUnitTestKotlin FROM-CACHE
+> Task :data:mapDebugUnitTestSourceSetPaths
+> Task :device-discovery:javaPreCompileDebugUnitTest FROM-CACHE
+> Task :data:generateDebugUnitTestResources FROM-CACHE
+> Task :device-discovery:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :device-discovery:processDebugUnitTestJavaRes
+> Task :device-discovery:testDebugUnitTest FROM-CACHE
+> Task :input-controller:preDebugUnitTestBuild UP-TO-DATE
+> Task :input-controller:generateDebugUnitTestStubRFile FROM-CACHE
+> Task :input-controller:javaPreCompileDebugUnitTest FROM-CACHE
+> Task :mirroring:preDebugUnitTestBuild UP-TO-DATE
+> Task :data:mergeDebugUnitTestResources FROM-CACHE
+> Task :mirroring:generateDebugUnitTestStubRFile FROM-CACHE
+> Task :mirroring:compileDebugUnitTestKotlin FROM-CACHE
+> Task :mirroring:javaPreCompileDebugUnitTest FROM-CACHE
+> Task :mirroring:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :mirroring:processDebugUnitTestJavaRes
+> Task :data:processDebugUnitTestManifest
+> Task :mirroring:testDebugUnitTest FROM-CACHE
+> Task :data:processDebugUnitTestResources FROM-CACHE
+> Task :airplay-protocol:compileTestJava FROM-CACHE
+> Task :airplay-protocol:processTestResources NO-SOURCE
+> Task :airplay-protocol:testClasses UP-TO-DATE
+> Task :airplay-protocol:test FROM-CACHE
+> Task :domain:compileTestKotlin FROM-CACHE
+> Task :domain:compileTestJava NO-SOURCE
+> Task :domain:processTestResources NO-SOURCE
+> Task :domain:testClasses UP-TO-DATE
+> Task :domain:test FROM-CACHE
+> Task :data:kspDebugUnitTestKotlin FROM-CACHE
+> Task :data:compileDebugUnitTestKotlin FROM-CACHE
+> Task :data:javaPreCompileDebugUnitTest FROM-CACHE
+> Task :data:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :data:mergeDebugAssets
+> Task :data:generateDebugUnitTestAssets UP-TO-DATE
+> Task :data:mergeDebugUnitTestAssets
+> Task :data:packageDebugUnitTestForUnitTest
+> Task :data:generateDebugUnitTestConfig
+> Task :data:processDebugUnitTestJavaRes
+> Task :data:testDebugUnitTest FROM-CACHE
+> Task :input-controller:compileDebugKotlin
+> Task :input-controller:compileDebugJavaWithJavac NO-SOURCE
+> Task :input-controller:compileReleaseKotlin
+> Task :input-controller:bundleLibCompileToJarDebug
+> Task :input-controller:bundleLibRuntimeToJarDebug
+> Task :input-controller:processDebugJavaRes
+> Task :input-controller:bundleLibRuntimeToDirDebug
+> Task :input-controller:extractDebugAnnotations
+> Task :input-controller:mergeDebugGeneratedProguardFiles
+> Task :input-controller:mergeDebugConsumerProguardFiles
+> Task :input-controller:mergeDebugJavaResource
+> Task :input-controller:syncDebugLibJars
+> Task :input-controller:bundleDebugAar
+> Task :input-controller:assembleDebug
+> Task :input-controller:compileReleaseJavaWithJavac NO-SOURCE
+> Task :input-controller:bundleLibCompileToJarRelease
+> Task :input-controller:bundleLibRuntimeToJarRelease
+> Task :input-controller:processReleaseJavaRes
+> Task :input-controller:createFullJarRelease
+> Task :input-controller:generateReleaseLintModel
+> Task :input-controller:extractReleaseAnnotations
+> Task :input-controller:mergeReleaseGeneratedProguardFiles
+> Task :input-controller:mergeReleaseConsumerProguardFiles
+> Task :input-controller:mergeReleaseJavaResource
+> Task :input-controller:syncReleaseLibJars
+> Task :input-controller:bundleReleaseLocalLintAar
+> Task :input-controller:generateReleaseLintVitalModel
+> Task :input-controller:exportReleaseConsumerProguardFiles
+> Task :input-controller:bundleReleaseAar
+> Task :input-controller:assembleRelease
+> Task :input-controller:compileDebugUnitTestKotlin
+> Task :app:mergeLibDexDebug
+> Task :input-controller:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :input-controller:processDebugUnitTestJavaRes
+> Task :input-controller:testDebugUnitTest
+> Task :app:kspDebugKotlin
+> Task :app:kspReleaseKotlin
+> Task :input-controller:lintVitalAnalyzeRelease
+
+> Task :app:compileReleaseKotlin
+w: file:///home/runner/work/iPhoneMiror-Android-/iPhoneMiror-Android-/app/src/main/java/com/aldiianshr/iphonemiror/ui/screens/ConnectScreen.kt:190:107 'val Icons.Outlined.BluetoothSearching: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Outlined.BluetoothSearching.
+w: file:///home/runner/work/iPhoneMiror-Android-/iPhoneMiror-Android-/app/src/main/java/com/aldiianshr/iphonemiror/ui/screens/TouchControlScreen.kt:142:114 'val Icons.Outlined.BluetoothSearching: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Outlined.BluetoothSearching.
+
+> Task :app:compileDebugKotlin
+w: file:///home/runner/work/iPhoneMiror-Android-/iPhoneMiror-Android-/app/src/main/java/com/aldiianshr/iphonemiror/ui/screens/ConnectScreen.kt:190:107 'val Icons.Outlined.BluetoothSearching: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Outlined.BluetoothSearching.
+w: file:///home/runner/work/iPhoneMiror-Android-/iPhoneMiror-Android-/app/src/main/java/com/aldiianshr/iphonemiror/ui/screens/TouchControlScreen.kt:142:114 'val Icons.Outlined.BluetoothSearching: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Outlined.BluetoothSearching.
+
+> Task :app:compileReleaseJavaWithJavac
+> Task :app:compileDebugJavaWithJavac
+> Task :app:hiltAggregateDepsDebug FROM-CACHE
+> Task :app:hiltJavaCompileDebug
+> Task :app:processDebugJavaRes
+> Task :app:hiltAggregateDepsRelease FROM-CACHE
+> Task :app:transformDebugClassesWithAsm
+> Task :app:mergeDebugJavaResource
+> Task :app:hiltJavaCompileRelease
+> Task :app:dexBuilderDebug
+> Task :app:mergeDebugGlobalSynthetics FROM-CACHE
+> Task :app:generateReleaseLintVitalReportModel
+> Task :app:mergeProjectDexDebug
+> Task :app:processReleaseJavaRes
+> Task :app:transformReleaseClassesWithAsm
+> Task :app:packageDebug
+> Task :app:createDebugApkListingFileRedirect
+> Task :app:assembleDebug
+> Task :app:mergeReleaseGeneratedProguardFiles
+> Task :app:bundleDebugClassesToRuntimeJar
+> Task :app:bundleDebugClassesToCompileJar
+> Task :app:kspDebugUnitTestKotlin NO-SOURCE
+> Task :app:compileDebugUnitTestKotlin NO-SOURCE
+> Task :app:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :app:mergeReleaseJavaResource
+> Task :app:hiltAggregateDepsDebugUnitTest FROM-CACHE
+> Task :app:hiltJavaCompileDebugUnitTest NO-SOURCE
+> Task :app:processDebugUnitTestJavaRes NO-SOURCE
+> Task :app:transformDebugUnitTestClassesWithAsm
+> Task :app:testDebugUnitTest NO-SOURCE
+> Task :app:expandReleaseArtProfileWildcards
+> Task :app:lintVitalAnalyzeRelease
+> Task :app:lintVitalReportRelease
+> Task :app:lintVitalRelease
+> Task :app:minifyReleaseWithR8
+> Task :app:compileReleaseArtProfile
+> Task :app:shrinkReleaseRes
+> Task :app:convertShrunkResourcesToBinaryRelease
+> Task :app:optimizeReleaseResources
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect
+> Task :app:assembleRelease
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1793762969917.json
+
+BUILD SUCCESSFUL in 3m 28s
+555 actionable tasks: 332 executed, 223 from cache

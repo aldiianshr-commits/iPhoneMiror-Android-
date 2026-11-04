@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.aldiianshr.iphonemiror.connection.AirPlayProfileTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2026-11-04T02:38:58" hostname="runnervm48cm3" time="0.102">
+  <properties/>
+  <testcase name="parsesAvcDecoderConfigurationRecord" classname="com.aldiianshr.iphonemiror.connection.AirPlayProfileTest" time="0.026"/>
+  <testcase name="txtRecordsFitDnsSdLimits" classname="com.aldiianshr.iphonemiror.connection.AirPlayProfileTest" time="0.041"/>
+  <testcase name="infoPlistContainsDisplayAndKey" classname="com.aldiianshr.iphonemiror.connection.AirPlayProfileTest" time="0.02"/>
+  <testcase name="audioFormatMapping" classname="com.aldiianshr.iphonemiror.connection.AirPlayProfileTest" time="0.004"/>
+  <testcase name="avccConversion" classname="com.aldiianshr.iphonemiror.connection.AirPlayProfileTest" time="0.0"/>
+  <testcase name="parsesSenderInfoAndStreams" classname="com.aldiianshr.iphonemiror.connection.AirPlayProfileTest" time="0.006"/>
+  <testcase name="featureMaskAdvertisesOnlyImplementedCapabilities" classname="com.aldiianshr.iphonemiror.connection.AirPlayProfileTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
