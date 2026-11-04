@@ -20,6 +20,7 @@ import kotlinx.coroutines.launch
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicLong
 import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.async
 
 /**
  * Direct touch control: receives the mapped touch stream from the mirroring view and
@@ -280,6 +281,32 @@ class TouchControlManager(
 
     // ---------------- WebDriverAgent ----------------
 
+    /** Probes every candidate in parallel and connects to the first one where WDA answers. */
+    suspend fun autoConnectWda(candidates: List<String>): Pair<Result<String>, List<WebDriverAgentClient.ProbeResult>> {
+        val unique = candidates.mapNotNull { c -> runCatching { WebDriverAgentClient.parse(c).url }.getOrNull() }.distinct()
+        if (unique.isEmpty()) return Result.failure<String>(WebDriverAgentClient.WdaException("Tidak ada alamat iPhone yang diketahui")) to emptyList()
+        val results = kotlinx.coroutines.coroutineScope {
+            unique.map { u -> async(Dispatchers.IO) { WebDriverAgentClient.probe(u) } }.map { it.await() }
+        }
+        results.forEach { AppLog.i(TAG, "WDA probe ${it.url}: ${it.outcome} ${it.detail}") }
+        val ok = results.firstOrNull { it.outcome == WebDriverAgentClient.ProbeResult.Outcome.OK }
+            ?: return Result.failure<String>(WebDriverAgentClient.WdaException(summarize(results))).also {
+                dropWda(summarize(results))
+            } to results
+        return connectWda(ok.url) to results
+    }
+
+    private fun summarize(results: List<WebDriverAgentClient.ProbeResult>): String {
+        val o = results.map { it.outcome }.toSet()
+        return when {
+            WebDriverAgentClient.ProbeResult.Outcome.REFUSED in o ->
+                "iPhone terjangkau tetapi WebDriverAgent tidak berjalan (port 8100 tertutup)"
+            o.all { it == WebDriverAgentClient.ProbeResult.Outcome.TIMEOUT } ->
+                "Tidak ada jawaban di port 8100 — WebDriverAgent belum dijalankan di iPhone"
+            else -> "WebDriverAgent tidak ditemukan di alamat yang dicoba"
+        }
+    }
+
     suspend fun connectWda(url: String): Result<String> = kotlinx.coroutines.withContext(wdaDispatcher) {
         runCatching {
             val client = WebDriverAgentClient(url)
@@ -294,7 +321,10 @@ class TouchControlManager(
             startPing()
             recompute()
             "Terhubung ke WDA${status.osVersion?.let { v -> " (iOS $v)" } ?: ""}, sesi ${session.take(8)}…"
-        }.onFailure { dropWda("Gagal terhubung: ${it.message}") }
+        }.onFailure { e ->
+            val (_, text) = WebDriverAgentClient.classify(e)
+            dropWda(text)
+        }.recoverCatching { e -> throw WebDriverAgentClient.WdaException(WebDriverAgentClient.classify(e).second) }
     }
 
     fun disconnectWda() = dropWda("Diputus oleh pengguna")

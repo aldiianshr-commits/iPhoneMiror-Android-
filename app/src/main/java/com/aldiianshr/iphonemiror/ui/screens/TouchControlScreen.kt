@@ -43,6 +43,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aldiianshr.iphonemiror.domain.model.HidOrientation
 import com.aldiianshr.iphonemiror.domain.model.HidPointerMode
 import com.aldiianshr.iphonemiror.domain.model.TouchBackendPref
+import com.aldiianshr.iphonemiror.input.touch.WebDriverAgentClient
 import com.aldiianshr.iphonemiror.ui.AppScreen
 import com.aldiianshr.iphonemiror.ui.components.Chip
 import com.aldiianshr.iphonemiror.ui.components.InfoNote
@@ -63,6 +64,7 @@ fun TouchControlScreen(receiverVm: ReceiverViewModel, onNavigate: (AppScreen) ->
     val receiver by receiverVm.state.collectAsStateWithLifecycle()
     val wdaMsg by vm.wdaMessage.collectAsStateWithLifecycle()
     val wdaBusy by vm.wdaBusy.collectAsStateWithLifecycle()
+    val probes by vm.probes.collectAsStateWithLifecycle()
     val iosMajor = receiver.device?.osVersion?.substringBefore('.')?.toIntOrNull()
 
     Page("Kontrol Sentuh", "Sentuh layar iPhone langsung dari Xiaomi Pad 6 — lewat jalur input resmi yang benar-benar diterima iOS.") {
@@ -157,7 +159,11 @@ fun TouchControlScreen(receiverVm: ReceiverViewModel, onNavigate: (AppScreen) ->
                     Spacer(Modifier.size(8.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         if (!touch.xctest.available) {
-                            PrimaryButton(if (wdaBusy) "Menghubungkan…" else "Hubungkan", Icons.Outlined.Link, enabled = !wdaBusy) {
+                            PrimaryButton(if (wdaBusy) "Mencari…" else "Cari & hubungkan otomatis", Icons.Outlined.Link, enabled = !wdaBusy,
+                                modifier = Modifier.testTag("wda_auto")) {
+                                vm.autoConnectWda(url)
+                            }
+                            SecondaryButton("Hubungkan URL ini", enabled = !wdaBusy && url.isNotBlank()) {
                                 vm.update { it.copy(wdaUrl = url) }
                                 vm.connectWda(url)
                             }
@@ -169,12 +175,28 @@ fun TouchControlScreen(receiverVm: ReceiverViewModel, onNavigate: (AppScreen) ->
                     KeyValue("Status", touch.xctest.reason)
                     KeyValue("Latensi", touch.connectionLatencyMs?.let { "$it ms (ping /status)" })
                     wdaMsg?.let { InfoNote(it) }
-                    Spacer(Modifier.size(8.dp))
-                    InfoNote(
-                        "Persiapan sekali: build & jalankan WebDriverAgent (proyek open-source Appium) di iPhone dengan Apple ID " +
-                            "developer Anda sendiri (Xcode di Mac, Mode Pengembang iPhone aktif). Setelah server WDA berjalan, " +
-                            "tablet terhubung lewat Wi-Fi ke port 8100. Ini bukan jailbreak; XCTest adalah alat pengujian resmi Apple.",
-                    )
+                    if (probes.isNotEmpty()) {
+                        Spacer(Modifier.size(8.dp))
+                        Text("Hasil pencarian", style = MaterialTheme.typography.labelMedium, color = Palette.TextSecondary)
+                        probes.forEach { pr ->
+                            val ok = pr.outcome == WebDriverAgentClient.ProbeResult.Outcome.OK
+                            Row(Modifier.fillMaxWidth().padding(vertical = 3.dp), verticalAlignment = Alignment.Top) {
+                                Icon(if (ok) Icons.Outlined.CheckCircle else Icons.Outlined.Close, null,
+                                    tint = if (ok) Palette.Ok else Palette.Warn, modifier = Modifier.size(16.dp))
+                                Spacer(Modifier.width(8.dp))
+                                Column {
+                                    Text(pr.url, style = com.aldiianshr.iphonemiror.ui.theme.Mono, color = Palette.Text)
+                                    Text(pr.detail + (pr.rttMs?.let { " ($it ms)" } ?: ""), style = MaterialTheme.typography.bodySmall, color = Palette.TextSecondary)
+                                }
+                            }
+                        }
+                    }
+                    if (vm.onIphoneHotspot()) {
+                        Spacer(Modifier.size(6.dp))
+                        InfoNote("Tablet tersambung ke Hotspot Pribadi iPhone — alamat IPv4 iPhone 172.20.10.1 ikut dicoba otomatis.")
+                    }
+                    Spacer(Modifier.size(10.dp))
+                    WdaGuide()
                 }
                 Panel(Modifier.fillMaxWidth(), title = "Dukungan gesture", subtitle = "Apa yang benar-benar dapat dikirim tiap jalur") {
                     MatrixHeader()
@@ -194,6 +216,54 @@ fun TouchControlScreen(receiverVm: ReceiverViewModel, onNavigate: (AppScreen) ->
         )
     }
 }
+
+/** Step-by-step WebDriverAgent setup, collapsible. Honest about needing a computer. */
+@Composable
+private fun WdaGuide() {
+    var open by remember { mutableStateOf(false) }
+    Column(
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Palette.SurfaceHigh).padding(12.dp),
+    ) {
+        Row(
+            Modifier.fillMaxWidth().clickable { open = !open }.testTag("wda_guide"),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text("Panduan menjalankan WebDriverAgent", style = MaterialTheme.typography.titleSmall, color = Palette.Text, modifier = Modifier.weight(1f))
+            Text(if (open) "Tutup" else "Buka", style = MaterialTheme.typography.labelMedium, color = Palette.TextSecondary)
+        }
+        if (open) {
+            Spacer(Modifier.size(8.dp))
+            Text(
+                "WebDriverAgent adalah aplikasi uji (XCTest) yang harus dipasang dan DIJALANKAN di iPhone dari komputer " +
+                    "dengan Xcode (Mac atau Hackintosh). Komputer harus tetap menyala selama sesi, karena Xcode yang menjaga WDA tetap hidup. " +
+                    "Tanpa komputer, gunakan jalur Bluetooth HID.",
+                style = MaterialTheme.typography.bodySmall, color = Palette.Warn,
+            )
+            Spacer(Modifier.size(8.dp))
+            GUIDE_STEPS.forEachIndexed { i, (title, body) ->
+                Row(Modifier.padding(vertical = 4.dp), verticalAlignment = Alignment.Top) {
+                    Text("${i + 1}", style = MaterialTheme.typography.labelLarge, color = Palette.Text, modifier = Modifier.width(22.dp))
+                    Column {
+                        Text(title, style = MaterialTheme.typography.bodyMedium, color = Palette.Text)
+                        Text(body, style = MaterialTheme.typography.bodySmall, color = Palette.TextSecondary)
+                    }
+                }
+            }
+        }
+    }
+}
+
+private val GUIDE_STEPS = listOf(
+    "Siapkan komputer macOS + Xcode" to "Mac atau Hackintosh dengan Xcode terbaru (gratis di App Store). Masuk Apple ID di Xcode → Settings → Accounts.",
+    "Aktifkan Mode Pengembang di iPhone" to "Sambungkan iPhone ke komputer dengan kabel, pilih Percayai. Lalu iPhone: Pengaturan → Privasi & Keamanan → Mode Pengembang → Aktif, restart.",
+    "Unduh WebDriverAgent" to "Terminal: git clone https://github.com/appium/WebDriverAgent lalu buka WebDriverAgent.xcodeproj.",
+    "Atur penandatanganan" to "Target WebDriverAgentRunner → Signing & Capabilities: pilih Team (Apple ID Anda) dan ubah Bundle Identifier menjadi unik, mis. com.namaanda.WebDriverAgentRunner.",
+    "Jalankan WDA ke iPhone" to "Pilih iPhone sebagai tujuan, lalu Product → Test (⌘U). Pertama kali: iPhone → Pengaturan → Umum → VPN & Manajemen Perangkat → percayai sertifikat Anda, lalu ulangi ⌘U.",
+    "Pastikan server berjalan" to "Di log Xcode muncul \"ServerURLHere->http://<IP iPhone>:8100<-ServerURLHere\". Biarkan Xcode tetap berjalan (jangan tekan Stop).",
+    "Satu jaringan dengan tablet" to "Tablet dan iPhone di Wi-Fi yang sama, atau tablet tersambung ke Hotspot Pribadi iPhone (alamat iPhone 172.20.10.1).",
+    "Hubungkan dari tablet" to "Tekan \"Cari & hubungkan otomatis\". Jika berhasil, status berubah \"Terhubung\" dan jalur input XCTest aktif.",
+    "Catatan Apple ID gratis" to "Sertifikat berlaku 7 hari; setelah itu ulangi langkah 5. Jika Xcode dihentikan atau kabel/jaringan Xcode putus, WDA berhenti dan tablet menampilkan \"tidak ada jawaban\".",
+)
 
 @Composable
 private fun Check(text: String, ok: Boolean?) {

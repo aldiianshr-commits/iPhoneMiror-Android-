@@ -115,6 +115,8 @@ class ConnectViewModel @Inject constructor(
 /** Direct touch control: touch stream, keyboard, backend setup. */
 @HiltViewModel
 class TouchViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
+    private val receiver: ReceiverController,
     private val touch: com.aldiianshr.iphonemiror.input.touch.TouchControlManager,
     private val hid: BluetoothHidController,
     private val settingsRepo: SettingsRepository,
@@ -128,6 +130,42 @@ class TouchViewModel @Inject constructor(
     val wdaMessage: StateFlow<String?> = _wdaMessage
     private val _wdaBusy = kotlinx.coroutines.flow.MutableStateFlow(false)
     val wdaBusy: StateFlow<Boolean> = _wdaBusy
+    private val _probes = kotlinx.coroutines.flow.MutableStateFlow<List<com.aldiianshr.iphonemiror.input.touch.WebDriverAgentClient.ProbeResult>>(emptyList())
+    val probes: StateFlow<List<com.aldiianshr.iphonemiror.input.touch.WebDriverAgentClient.ProbeResult>> = _probes
+
+    /** True when the tablet is connected to the iPhone's Personal Hotspot (172.20.10.x). */
+    fun onIphoneHotspot(): Boolean = com.aldiianshr.iphonemiror.core.NetworkInfo.current(context).onIphoneHotspot
+
+    /** Addresses where the iPhone may be reachable: typed URL, AirPlay peer, hotspot gateway. */
+    fun wdaCandidates(typed: String): List<String> {
+        val net = com.aldiianshr.iphonemiror.core.NetworkInfo.current(context)
+        val out = ArrayList<String>()
+        if (typed.isNotBlank()) out += typed
+        receiver.state.value.device?.address?.takeUnless { it.startsWith("127.") }?.let {
+            out += com.aldiianshr.iphonemiror.input.touch.WebDriverAgentClient.urlFor(it)
+        }
+        if (net.onIphoneHotspot) {
+            out += com.aldiianshr.iphonemiror.input.touch.WebDriverAgentClient.urlFor(net.gatewayIpv4 ?: "172.20.10.1")
+        }
+        return out
+    }
+
+    /** Tries all candidate addresses at once and connects to the one where WDA answers. */
+    fun autoConnectWda(typed: String) {
+        viewModelScope.launch {
+            _wdaBusy.value = true
+            val candidates = wdaCandidates(typed)
+            _wdaMessage.value = "Mencoba ${candidates.size} alamat…"
+            val (result, probes) = touch.autoConnectWda(candidates)
+            _probes.value = probes
+            result.onSuccess { msg ->
+                _wdaMessage.value = msg
+                probes.firstOrNull { it.outcome == com.aldiianshr.iphonemiror.input.touch.WebDriverAgentClient.ProbeResult.Outcome.OK }
+                    ?.let { ok -> update { it.copy(wdaUrl = ok.url) } }
+            }.onFailure { _wdaMessage.value = it.message }
+            _wdaBusy.value = false
+        }
+    }
 
     fun onTouch(e: com.aldiianshr.iphonemiror.input.touch.TouchEvent) = touch.onTouch(e)
     fun type(text: String) = touch.typeText(text)
@@ -145,7 +183,7 @@ class TouchViewModel @Inject constructor(
             _wdaBusy.value = true
             _wdaMessage.value = "Menghubungkan ke $url…"
             touch.connectWda(url.trim())
-                .onSuccess { _wdaMessage.value = it }
+                .onSuccess { _wdaMessage.value = it; _probes.value = emptyList() }
                 .onFailure { _wdaMessage.value = "Gagal: ${it.message}" }
             _wdaBusy.value = false
         }

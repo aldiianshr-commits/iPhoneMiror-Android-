@@ -160,8 +160,59 @@ class WebDriverAgentClient(baseUrl: String, private val timeoutMs: Int = 5_000) 
         return out.toByteArray()
     }
 
+    /** Result of checking one candidate address for a running WebDriverAgent. */
+    data class ProbeResult(
+        val url: String,
+        val outcome: Outcome,
+        val detail: String,
+        val rttMs: Long? = null,
+        val osVersion: String? = null,
+    ) {
+        enum class Outcome { OK, REFUSED, TIMEOUT, UNREACHABLE, NOT_WDA, INVALID }
+    }
+
     companion object {
         const val DEFAULT_PORT = 8100
+
+        /**
+         * Checks `GET /status` on [url] with a short timeout and explains the result in plain
+         * terms: REFUSED = the iPhone answered but nothing listens on the port (WDA not
+         * running); TIMEOUT = no answer at all (WDA not running on an iPhone that silently
+         * drops packets, wrong address, or a different network).
+         */
+        fun probe(url: String, timeoutMs: Int = 2_500): ProbeResult {
+            val client = try {
+                WebDriverAgentClient(url, timeoutMs)
+            } catch (e: Exception) {
+                return ProbeResult(url, ProbeResult.Outcome.INVALID, "URL tidak valid: ${e.message}")
+            }
+            val t0 = System.nanoTime()
+            return try {
+                val st = client.status()
+                ProbeResult(client.baseUrl, ProbeResult.Outcome.OK, "WebDriverAgent menjawab",
+                    (System.nanoTime() - t0) / 1_000_000, st.osVersion)
+            } catch (e: Exception) {
+                val (outcome, text) = classify(e)
+                ProbeResult(client.baseUrl, outcome, text)
+            }
+        }
+
+        fun classify(e: Throwable): Pair<ProbeResult.Outcome, String> {
+            val msg = (e.message ?: "").lowercase()
+            return when {
+                e is java.net.ConnectException && ("refused" in msg || "econnrefused" in msg) ->
+                    ProbeResult.Outcome.REFUSED to "iPhone terjangkau, tetapi port tertutup — WebDriverAgent tidak berjalan"
+                e is java.net.SocketTimeoutException || "timed out" in msg || "etimedout" in msg || "after" in msg && "ms" in msg ->
+                    ProbeResult.Outcome.TIMEOUT to "Tidak ada jawaban — WebDriverAgent tidak berjalan, atau alamat/jaringan berbeda"
+                e is java.net.NoRouteToHostException || "ehostunreach" in msg || "enetunreach" in msg || "unreachable" in msg ->
+                    ProbeResult.Outcome.UNREACHABLE to "Alamat tidak dapat dijangkau dari jaringan tablet"
+                e is WdaException ->
+                    ProbeResult.Outcome.NOT_WDA to "Ada server di port ini, tetapi bukan WebDriverAgent (${e.message})"
+                e is java.net.ConnectException ->
+                    ProbeResult.Outcome.UNREACHABLE to "Koneksi gagal: ${e.message}"
+                else -> ProbeResult.Outcome.NOT_WDA to (e.message ?: e.javaClass.simpleName)
+            }
+        }
 
         /** Builds the default WDA URL for an address seen on the AirPlay connection. */
         fun urlFor(address: String, port: Int = DEFAULT_PORT): String = Endpoint(address.trim().removePrefix("/"), port).url

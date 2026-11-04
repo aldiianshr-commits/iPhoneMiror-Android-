@@ -110,3 +110,24 @@ class WdaUrlParsingTest {
     @Test(expected = java.io.IOException::class)
     fun rejectsBadPort() { p("http://192.168.1.20:99999") }
 }
+
+class WdaProbeTest {
+    private val C = com.aldiianshr.iphonemiror.input.touch.WebDriverAgentClient
+    private val O = com.aldiianshr.iphonemiror.input.touch.WebDriverAgentClient.ProbeResult.Outcome
+
+    @Test fun classifiesAndroidSocketErrors() {
+        // Exact message from a Xiaomi Pad 6 when nothing answered on the iPhone.
+        val timeout = java.net.SocketTimeoutException(
+            "failed to connect to /fe80::820:5998:b9ee:a929%wlan0 (port 8100) from /fe80::863:73ff:fecf:abab%wlan0 (port 49542) after 5000ms")
+        assertEquals(O.TIMEOUT, C.classify(timeout).first)
+        assertEquals(O.REFUSED, C.classify(java.net.ConnectException("failed to connect to /172.20.10.1 (port 8100): connect failed: ECONNREFUSED (Connection refused)")).first)
+        assertEquals(O.UNREACHABLE, C.classify(java.net.NoRouteToHostException("EHOSTUNREACH")).first)
+    }
+
+    @Test fun probeReportsRefusedOnClosedPort() {
+        // Grab a free port and close it so nothing listens there.
+        val port = java.net.ServerSocket(0).use { it.localPort }
+        val r = C.probe("http://127.0.0.1:$port", 1_000)
+        assertEquals(O.REFUSED, r.outcome)
+    }
+}
