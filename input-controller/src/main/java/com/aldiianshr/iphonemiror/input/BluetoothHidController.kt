@@ -45,6 +45,13 @@ class BluetoothHidController(private val context: Context) {
         val bondedHosts: List<Pair<String, String>> = emptyList(),
         val error: String? = null,
         val absolutePointer: Boolean = true,
+        val discovering: Boolean = false,
+        val nearby: List<NearbyDevice> = emptyList(),
+        /** Address the tablet is currently pairing with (bond in progress). */
+        val pairingAddress: String? = null,
+        val pairingMessage: String? = null,
+        /** Remembered iPhone that is reconnected automatically. */
+        val preferredHost: String? = null,
     ) {
         val canSend: Boolean get() = link == Link.CONNECTED
     }
@@ -55,6 +62,21 @@ class BluetoothHidController(private val context: Context) {
     private val callbackExecutor = Executors.newSingleThreadExecutor()
     private val _state = MutableStateFlow(State(supported = adapter != null))
     val state: StateFlow<State> = _state.asStateFlow()
+
+    data class NearbyDevice(
+        val address: String,
+        val name: String?,
+        val isPhone: Boolean,
+        val bonded: Boolean,
+        val rssi: Int?,
+    )
+
+    /** Called when an iPhone becomes the connected HID host (to persist it for reconnects). */
+    @Volatile var onHostConnected: ((address: String, name: String?) -> Unit)? = null
+
+    private val nearbyMap = LinkedHashMap<String, NearbyDevice>()
+    private var receiverRegistered = false
+    private val mainHandler = android.os.Handler(android.os.Looper.getMainLooper())
 
     private sealed interface Out {
         class Report(val id: Int, val data: ByteArray, val key: String? = null) : Out
@@ -144,6 +166,7 @@ class BluetoothHidController(private val context: Context) {
             AppLog.i(TAG, "HID app registered=$registered plugged=${pluggedDevice?.address}")
             _state.update { it.copy(registered = registered, error = if (registered) null else it.error) }
             if (registered && pluggedDevice != null) runCatching { hid?.connect(pluggedDevice) }
+            else if (registered) scheduleReconnect(500)
         }
 
         @SuppressLint("MissingPermission")
@@ -155,6 +178,13 @@ class BluetoothHidController(private val context: Context) {
                 else -> Link.DISCONNECTED
             }
             AppLog.i(TAG, "HID host ${device.address} → $link")
+            if (link == Link.CONNECTED) {
+                mainHandler.removeCallbacks(reconnectRunnable)
+                onHostConnected?.invoke(device.address, runCatching { device.name }.getOrNull())
+                _state.update { it.copy(pairingAddress = null, pairingMessage = null, preferredHost = device.address) }
+            } else if (link == Link.DISCONNECTED) {
+                scheduleReconnect(RECONNECT_INTERVAL_MS)
+            }
             host = if (link == Link.CONNECTED) device else if (host?.address == device.address) null else host
             val name = runCatching { device.name }.getOrNull()
             _state.update {
@@ -177,6 +207,166 @@ class BluetoothHidController(private val context: Context) {
         }
     }
 
+    // ---- Pairing from the tablet & automatic reconnect ----
+
+    /** iPhone to reconnect to automatically (persisted by the app). */
+    fun setPreferredHost(address: String?) {
+        _state.update { it.copy(preferredHost = address?.takeIf { a -> a.isNotBlank() }) }
+        if (_state.value.registered && _state.value.link != Link.CONNECTED) scheduleReconnect(300)
+    }
+
+    private val reconnectRunnable = Runnable { tryReconnect() }
+
+    private fun scheduleReconnect(delayMs: Long) {
+        mainHandler.removeCallbacks(reconnectRunnable)
+        if (_state.value.preferredHost != null) mainHandler.postDelayed(reconnectRunnable, delayMs)
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun tryReconnect() {
+        val st = _state.value
+        val target = st.preferredHost ?: return
+        if (!st.registered || st.link == Link.CONNECTED || st.link == Link.CONNECTING || st.pairingAddress != null) {
+            if (st.link != Link.CONNECTED) scheduleReconnect(RECONNECT_INTERVAL_MS)
+            return
+        }
+        val device = runCatching { adapter?.getRemoteDevice(target) }.getOrNull() ?: return
+        if (device.bondState == BluetoothDevice.BOND_BONDED) {
+            AppLog.d(TAG, "Auto-reconnect to $target")
+            runCatching { hid?.connect(device) }
+        }
+        scheduleReconnect(RECONNECT_INTERVAL_MS)
+    }
+
+    private val btReceiver = object : android.content.BroadcastReceiver() {
+        @SuppressLint("MissingPermission")
+        override fun onReceive(ctx: Context, intent: android.content.Intent) {
+            when (intent.action) {
+                BluetoothDevice.ACTION_FOUND -> {
+                    val d = intent.parcelableDevice() ?: return
+                    val rssi = intent.getShortExtra(BluetoothDevice.EXTRA_RSSI, Short.MIN_VALUE).takeIf { it != Short.MIN_VALUE }?.toInt()
+                    val name = runCatching { d.name }.getOrNull()
+                    val major = d.bluetoothClass?.majorDeviceClass
+                    val phone = major == android.bluetooth.BluetoothClass.Device.Major.PHONE ||
+                        name?.contains("iPhone", true) == true
+                    if (name == null && !phone) return
+                    synchronized(nearbyMap) {
+                        nearbyMap[d.address] = NearbyDevice(d.address, name, phone, d.bondState == BluetoothDevice.BOND_BONDED, rssi)
+                        _state.update { it.copy(nearby = sortedNearby()) }
+                    }
+                }
+                android.bluetooth.BluetoothAdapter.ACTION_DISCOVERY_FINISHED ->
+                    _state.update { it.copy(discovering = false) }
+                BluetoothDevice.ACTION_BOND_STATE_CHANGED -> {
+                    val d = intent.parcelableDevice() ?: return
+                    val bond = intent.getIntExtra(BluetoothDevice.EXTRA_BOND_STATE, BluetoothDevice.BOND_NONE)
+                    if (d.address != _state.value.pairingAddress) return
+                    when (bond) {
+                        BluetoothDevice.BOND_BONDED -> {
+                            AppLog.i(TAG, "Bonded with ${d.address}; connecting HID")
+                            _state.update { it.copy(pairingMessage = "Terpasang. Menghubungkan kontrol…") }
+                            mainHandler.postDelayed({ runCatching { hid?.connect(d) } }, 600)
+                            mainHandler.postDelayed({
+                                if (_state.value.link != Link.CONNECTED && _state.value.pairingAddress == d.address) {
+                                    _state.update {
+                                        it.copy(pairingAddress = null, pairingMessage = "Sudah terpasang, tetapi iPhone belum menerima kontrol. Di iPhone: Pengaturan → Bluetooth → ketuk nama tablet.")
+                                    }
+                                }
+                            }, 10_000)
+                        }
+                        BluetoothDevice.BOND_NONE -> _state.update {
+                            it.copy(pairingAddress = null, pairingMessage = "Pemasangan dibatalkan atau ditolak di iPhone. Coba lagi.")
+                        }
+                        BluetoothDevice.BOND_BONDING -> _state.update {
+                            it.copy(pairingMessage = "Konfirmasi kode yang sama di iPhone dan tablet…")
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun sortedNearby() = nearbyMap.values.sortedWith(
+        compareByDescending<NearbyDevice> { it.isPhone }.thenByDescending { it.rssi ?: -200 },
+    )
+
+    @Suppress("DEPRECATION")
+    private fun android.content.Intent.parcelableDevice(): BluetoothDevice? =
+        if (android.os.Build.VERSION.SDK_INT >= 33) getParcelableExtra(BluetoothDevice.EXTRA_DEVICE, BluetoothDevice::class.java)
+        else getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)
+
+    private fun ensureReceiver() {
+        if (receiverRegistered) return
+        val f = android.content.IntentFilter().apply {
+            addAction(BluetoothDevice.ACTION_FOUND)
+            addAction(android.bluetooth.BluetoothAdapter.ACTION_DISCOVERY_FINISHED)
+            addAction(BluetoothDevice.ACTION_BOND_STATE_CHANGED)
+        }
+        ContextCompat.registerReceiver(context, btReceiver, f, ContextCompat.RECEIVER_EXPORTED)
+        receiverRegistered = true
+    }
+
+    /**
+     * Searches for nearby Bluetooth devices so the iPhone can be paired from the tablet.
+     * The iPhone is only discoverable while its Settings → Bluetooth screen is open.
+     */
+    @SuppressLint("MissingPermission")
+    fun startDiscovery() {
+        val a = adapter ?: return
+        if (!hasPermission() || ContextCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
+            _state.update { it.copy(error = "Izin Bluetooth (Perangkat di sekitar) belum diberikan") }
+            return
+        }
+        if (!a.isEnabled) { _state.update { it.copy(error = "Bluetooth mati") }; return }
+        ensureReceiver()
+        synchronized(nearbyMap) {
+            nearbyMap.clear()
+            // Already-paired phones are listed immediately.
+            runCatching { a.bondedDevices }.getOrNull().orEmpty().forEach { d ->
+                val name = runCatching { d.name }.getOrNull()
+                val phone = d.bluetoothClass?.majorDeviceClass == android.bluetooth.BluetoothClass.Device.Major.PHONE ||
+                    name?.contains("iPhone", true) == true
+                if (phone) nearbyMap[d.address] = NearbyDevice(d.address, name, true, true, null)
+            }
+        }
+        if (a.isDiscovering) a.cancelDiscovery()
+        val ok = runCatching { a.startDiscovery() }.getOrDefault(false)
+        _state.update { it.copy(discovering = ok, nearby = sortedNearby(), error = if (ok) null else "Pencarian Bluetooth gagal dimulai") }
+    }
+
+    @SuppressLint("MissingPermission")
+    fun stopDiscovery() {
+        runCatching { adapter?.cancelDiscovery() }
+        _state.update { it.copy(discovering = false) }
+    }
+
+    /** Pairs with [address] (if needed) and connects the tablet's keyboard/pointer to it. */
+    @SuppressLint("MissingPermission")
+    fun pairAndConnect(address: String) {
+        val a = adapter ?: return
+        if (!_state.value.registered) { _state.update { it.copy(error = "Aktifkan kontrol Bluetooth terlebih dahulu") }; return }
+        ensureReceiver()
+        runCatching { a.cancelDiscovery() }
+        val device = runCatching { a.getRemoteDevice(address) }.getOrNull() ?: return
+        _state.update { it.copy(pairingAddress = address, preferredHost = address, discovering = false) }
+        if (device.bondState == BluetoothDevice.BOND_BONDED) {
+            _state.update { it.copy(pairingMessage = "Menghubungkan kontrol…") }
+            runCatching { hid?.connect(device) }
+            mainHandler.postDelayed({
+                if (_state.value.link != Link.CONNECTED && _state.value.pairingAddress == address) {
+                    _state.update {
+                        it.copy(pairingAddress = null, pairingMessage = "iPhone belum menerima koneksi. Di iPhone: Pengaturan → Bluetooth → ketuk nama tablet.")
+                    }
+                }
+            }, 8_000)
+        } else {
+            val ok = runCatching { device.createBond() }.getOrDefault(false)
+            _state.update {
+                it.copy(pairingMessage = if (ok) "Meminta pemasangan… konfirmasi di iPhone." else "Gagal memulai pemasangan", pairingAddress = if (ok) address else null)
+            }
+        }
+    }
+
     /** Connects to an already-paired host (the iPhone) by address. */
     @SuppressLint("MissingPermission")
     fun connect(address: String) {
@@ -193,6 +383,8 @@ class BluetoothHidController(private val context: Context) {
 
     @SuppressLint("MissingPermission")
     fun stop() {
+        mainHandler.removeCallbacks(reconnectRunnable)
+        stopDiscovery()
         disconnect()
         runCatching { hid?.unregisterApp() }
         hid?.let { adapter?.closeProfileProxy(BluetoothProfile.HID_DEVICE, it) }
@@ -296,5 +488,6 @@ class BluetoothHidController(private val context: Context) {
     companion object {
         private const val TAG = "BtHid"
         const val REPORT_INTERVAL_MS = 8L
+        const val RECONNECT_INTERVAL_MS = 10_000L
     }
 }

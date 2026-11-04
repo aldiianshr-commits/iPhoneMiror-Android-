@@ -33,6 +33,10 @@ class DataStoreSettingsRepository(private val context: Context) : SettingsReposi
         val SCREEN_ON = booleanPreferencesKey("keep_screen_on")
         val LOW_LATENCY = booleanPreferencesKey("low_latency")
         val TOUCH_BACKEND = stringPreferencesKey("touch_backend")
+        val HID_ENABLED = booleanPreferencesKey("hid_enabled")
+        val HID_HOST = stringPreferencesKey("hid_host")
+        val HID_HOST_NAME = stringPreferencesKey("hid_host_name")
+        val ADVANCED_TOUCH = booleanPreferencesKey("advanced_touch")
         val HID_POINTER = stringPreferencesKey("hid_pointer_mode")
         val HID_ORIENTATION = stringPreferencesKey("hid_orientation")
         val INVERT_SCROLL = booleanPreferencesKey("invert_scroll")
@@ -60,6 +64,10 @@ class DataStoreSettingsRepository(private val context: Context) : SettingsReposi
             keepScreenOn = p[Keys.SCREEN_ON] ?: d.keepScreenOn,
             lowLatencyDecoder = p[Keys.LOW_LATENCY] ?: d.lowLatencyDecoder,
             touchBackend = p[Keys.TOUCH_BACKEND].enumOr(d.touchBackend),
+            hidEnabled = p[Keys.HID_ENABLED] ?: d.hidEnabled,
+            hidHostAddress = p[Keys.HID_HOST] ?: d.hidHostAddress,
+            hidHostName = p[Keys.HID_HOST_NAME] ?: d.hidHostName,
+            showAdvancedTouch = p[Keys.ADVANCED_TOUCH] ?: d.showAdvancedTouch,
             hidPointerMode = p[Keys.HID_POINTER].enumOr(d.hidPointerMode),
             hidOrientation = p[Keys.HID_ORIENTATION].enumOr(d.hidOrientation),
             invertScroll = p[Keys.INVERT_SCROLL] ?: d.invertScroll,
@@ -88,6 +96,10 @@ class DataStoreSettingsRepository(private val context: Context) : SettingsReposi
             p[Keys.SCREEN_ON] = n.keepScreenOn
             p[Keys.LOW_LATENCY] = n.lowLatencyDecoder
             p[Keys.TOUCH_BACKEND] = n.touchBackend.name
+            p[Keys.HID_ENABLED] = n.hidEnabled
+            p[Keys.HID_HOST] = n.hidHostAddress
+            p[Keys.HID_HOST_NAME] = n.hidHostName
+            p[Keys.ADVANCED_TOUCH] = n.showAdvancedTouch
             p[Keys.HID_POINTER] = n.hidPointerMode.name
             p[Keys.HID_ORIENTATION] = n.hidOrientation.name
             p[Keys.INVERT_SCROLL] = n.invertScroll

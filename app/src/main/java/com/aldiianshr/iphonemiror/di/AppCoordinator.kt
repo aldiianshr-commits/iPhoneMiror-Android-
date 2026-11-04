@@ -36,6 +36,7 @@ class AppCoordinator @Inject constructor(
     private val history: RoomHistoryRepository,
     private val touch: TouchControlManager,
     private val engine: MirrorEngine,
+    private val hid: com.aldiianshr.iphonemiror.input.BluetoothHidController,
 ) {
     val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
@@ -48,6 +49,25 @@ class AppCoordinator @Inject constructor(
                 receiver.applySettings(s)
                 touch.configure(s)
             }
+        }
+        // Bluetooth keyboard/pointer: restore on start, remember the iPhone that connects.
+        hid.onHostConnected = { address, name ->
+            scope.launch {
+                if (holder.current.hidHostAddress != address || holder.current.hidHostName != (name ?: "")) {
+                    settingsRepository.update { it.copy(hidHostAddress = address, hidHostName = name ?: it.hidHostName) }
+                }
+            }
+        }
+        scope.launch {
+            settingsRepository.settings.distinctUntilChanged { a, b -> a.hidEnabled == b.hidEnabled && a.hidHostAddress == b.hidHostAddress }
+                .collect { s ->
+                    hid.setPreferredHost(s.hidHostAddress.ifBlank { null })
+                    if (s.hidEnabled && !hid.state.value.registered) {
+                        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) { hid.start() }
+                    } else if (!s.hidEnabled && hid.state.value.registered) {
+                        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) { hid.stop() }
+                    }
+                }
         }
         // Feed the touch mapper the real stream geometry and the iPhone's address.
         scope.launch { engine.stats.collect { st -> if (st.hasVideo) touch.setVideoSize(st.width, st.height) } }

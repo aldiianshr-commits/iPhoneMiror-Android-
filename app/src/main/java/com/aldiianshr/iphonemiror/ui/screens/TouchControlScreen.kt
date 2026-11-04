@@ -1,8 +1,14 @@
 package com.aldiianshr.iphonemiror.ui.screens
 
+import android.bluetooth.BluetoothAdapter
+import android.content.Intent
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -13,6 +19,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Bluetooth
+import androidx.compose.material.icons.outlined.BluetoothSearching
+import androidx.compose.material.icons.outlined.Check
+import androidx.compose.material.icons.outlined.PhoneIphone
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.GridOn
@@ -67,7 +76,12 @@ fun TouchControlScreen(receiverVm: ReceiverViewModel, onNavigate: (AppScreen) ->
     val probes by vm.probes.collectAsStateWithLifecycle()
     val iosMajor = receiver.device?.osVersion?.substringBefore('.')?.toIntOrNull()
 
-    Page("Kontrol Sentuh", "Sentuh layar iPhone langsung dari Xiaomi Pad 6 — lewat jalur input resmi yang benar-benar diterima iOS.") {
+    val btPermissions = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { vm.refreshBluetooth() }
+    val enableBt = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { vm.refreshBluetooth() }
+    val discoverable = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { }
+    val connected = hid.link.name == "CONNECTED"
+
+    Page("Kontrol Sentuh", "Sentuh layar iPhone langsung dari Xiaomi Pad 6 — cukup tablet dan iPhone, lewat Bluetooth.") {
         Panel(Modifier.fillMaxWidth().testTag("touch_status_panel")) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Outlined.TouchApp, null, tint = Palette.Text, modifier = Modifier.size(28.dp))
@@ -85,136 +99,253 @@ fun TouchControlScreen(receiverVm: ReceiverViewModel, onNavigate: (AppScreen) ->
                 }
                 PrimaryButton("Buka Mirroring", Icons.Outlined.TouchApp) { onNavigate(AppScreen.MIRRORING) }
             }
-            Spacer(Modifier.size(12.dp))
-            Text("Jalur input", style = MaterialTheme.typography.labelMedium, color = Palette.TextSecondary)
-            Spacer(Modifier.size(6.dp))
-            Choice(TouchBackendPref.entries.map { it.label }, TouchBackendPref.entries.indexOf(s.touchBackend)) { i ->
-                vm.update { it.copy(touchBackend = TouchBackendPref.entries[i]) }
-            }
-            Spacer(Modifier.size(8.dp))
-            Toggle("Indikator sentuhan", "Lingkaran di posisi jari & warna status gesture terakhir", s.showTouchIndicators) { v ->
-                vm.update { it.copy(showTouchIndicators = v) }
-            }
-            Toggle("Bar status sentuhan di Mirroring", "Pil kecil di pojok kiri bawah; bisa disembunyikan dari layar Mirroring", s.showTouchStatusBar) { v ->
-                vm.update { it.copy(showTouchStatusBar = v) }
-            }
         }
 
         ResponsiveColumns(
             left = {
-                Panel(Modifier.fillMaxWidth(), title = "Bluetooth HID — real-time", subtitle = "Tablet menjadi pointer absolut untuk iPhone", trailing = {
-                    Chip(if (touch.hid.available) "Siap" else "Tidak siap", if (touch.hid.available) Palette.Ok else Palette.Warn)
-                }) {
-                    Text(touch.hid.reason, style = MaterialTheme.typography.bodyMedium, color = Palette.TextSecondary)
-                    Spacer(Modifier.size(10.dp))
-                    Check("Kontrol Bluetooth aktif di tablet", hid.registered)
-                    Check("iPhone terhubung sebagai host (${hid.host ?: "—"})", hid.link.name == "CONNECTED")
+                Panel(Modifier.fillMaxWidth().testTag("hid_setup"), title = "Setup: tablet + iPhone saja",
+                    subtitle = "Tablet menjadi pointer & keyboard Bluetooth untuk iPhone. Tanpa komputer, tanpa kabel.", trailing = {
+                        Chip(if (touch.hid.available) "Siap" else "Belum siap", if (touch.hid.available) Palette.Ok else Palette.Warn)
+                    }) {
+                    // 1. Permission
+                    Step(1, "Izin Bluetooth di tablet", hid.permissionGranted) {
+                        if (!hid.permissionGranted) SecondaryButton("Berikan izin", Icons.Outlined.Bluetooth) {
+                            btPermissions.launch(arrayOf(
+                                android.Manifest.permission.BLUETOOTH_SCAN,
+                                android.Manifest.permission.BLUETOOTH_CONNECT,
+                                android.Manifest.permission.BLUETOOTH_ADVERTISE,
+                            ))
+                        }
+                    }
+                    // 2. Bluetooth on
+                    Step(2, "Bluetooth tablet menyala", hid.bluetoothOn) {
+                        if (hid.permissionGranted && !hid.bluetoothOn) SecondaryButton("Nyalakan Bluetooth") {
+                            enableBt.launch(Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE))
+                        }
+                    }
+                    // 3. Register HID
+                    Step(3, "Aktifkan kontrol di tablet", hid.registered) {
+                        if (!hid.registered) PrimaryButton("Aktifkan kontrol Bluetooth", Icons.Outlined.Bluetooth,
+                            enabled = hid.permissionGranted && hid.bluetoothOn, modifier = Modifier.testTag("hid_enable")) { vm.setHidEnabled(true) }
+                        else SecondaryButton("Matikan kontrol") { vm.setHidEnabled(false) }
+                    }
+                    // 4. Pair / connect iPhone
+                    Step(4, if (connected) "iPhone tersambung: ${hid.host}" else "Sambungkan iPhone", connected) {
+                        if (hid.registered && !connected) {
+                            Text(
+                                "Di iPhone buka Pengaturan → Bluetooth (biarkan halaman itu terbuka), lalu cari dari tablet dan ketuk nama iPhone. " +
+                                    "Konfirmasi kode yang sama di kedua perangkat.",
+                                style = MaterialTheme.typography.bodySmall, color = Palette.TextSecondary,
+                            )
+                            Spacer(Modifier.size(6.dp))
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                PrimaryButton(if (hid.discovering) "Mencari…" else "Cari iPhone", Icons.Outlined.BluetoothSearching,
+                                    enabled = !hid.discovering, modifier = Modifier.testTag("hid_search")) { vm.searchIphone() }
+                                SecondaryButton("Buat tablet terlihat") {
+                                    discoverable.launch(Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE).putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 120))
+                                }
+                            }
+                            hid.pairingMessage?.let { Spacer(Modifier.size(6.dp)); InfoNote(it) }
+                            if (hid.nearby.isNotEmpty()) {
+                                Spacer(Modifier.size(6.dp))
+                                hid.nearby.take(8).forEach { d ->
+                                    Row(Modifier.fillMaxWidth().padding(vertical = 3.dp), verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(if (d.isPhone) Icons.Outlined.PhoneIphone else Icons.Outlined.Bluetooth, null,
+                                            tint = Palette.TextSecondary, modifier = Modifier.size(18.dp))
+                                        Spacer(Modifier.width(8.dp))
+                                        Column(Modifier.weight(1f)) {
+                                            Text(d.name ?: d.address, style = MaterialTheme.typography.bodyMedium, color = Palette.Text)
+                                            Text(listOfNotNull(if (d.bonded) "sudah dipasangkan" else null, d.rssi?.let { "$it dBm" }).joinToString(" · "),
+                                                style = MaterialTheme.typography.bodySmall, color = Palette.TextTertiary)
+                                        }
+                                        SecondaryButton(if (d.bonded) "Sambungkan" else "Pasangkan",
+                                            enabled = hid.pairingAddress == null) { vm.pair(d.address) }
+                                    }
+                                }
+                            } else if (hid.discovering) {
+                                Spacer(Modifier.size(4.dp))
+                                Text("Mencari… pastikan halaman Bluetooth iPhone sedang terbuka.", style = MaterialTheme.typography.bodySmall, color = Palette.TextTertiary)
+                            }
+                            if (s.hidHostAddress.isNotBlank()) {
+                                Spacer(Modifier.size(6.dp))
+                                Text("Tersambung ulang otomatis ke ${s.hidHostName.ifBlank { s.hidHostAddress }} saat terjangkau.",
+                                    style = MaterialTheme.typography.bodySmall, color = Palette.TextTertiary)
+                            }
+                        } else if (connected) {
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                SecondaryButton("Putuskan") { vm.disconnectHid() }
+                                SecondaryButton("Lupakan iPhone ini") { vm.forgetIphone() }
+                            }
+                        }
+                    }
+                    // 5. AssistiveTouch
+                    Step(5, "Nyalakan AssistiveTouch di iPhone", null) {
+                        Text(
+                            "iPhone: Pengaturan → Aksesibilitas → Sentuh → AssistiveTouch → Aktif. Tanpa ini pointer bergerak tetapi ketukan tidak bekerja. " +
+                                "Tablet tidak bisa mendeteksi pengaturan ini — gunakan uji di langkah 6.",
+                            style = MaterialTheme.typography.bodySmall, color = Palette.TextSecondary,
+                        )
+                    }
+                    // 6. Verify
+                    Step(6, "Uji: pointer harus muncul di layar mirroring", null) {
+                        Text(
+                            "Mirror iPhone ke tablet (Pusat Kontrol → Pencerminan Layar), lalu tekan Uji pemetaan: lingkaran pointer bergerak ke tengah dan ke empat sudut tanpa mengetuk.",
+                            style = MaterialTheme.typography.bodySmall, color = Palette.TextSecondary,
+                        )
+                        Spacer(Modifier.size(6.dp))
+                        SecondaryButton("Uji pemetaan", Icons.Outlined.GridOn, enabled = touch.hid.available) { vm.mappingTest() }
+                    }
+                    Spacer(Modifier.size(6.dp))
                     Check(
-                        "iOS 18 atau lebih baru untuk pointer absolut" + (receiver.device?.osVersion?.let { " (terdeteksi iOS $it)" } ?: " (versi belum terdeteksi)"),
+                        "iOS 18+ untuk pointer absolut" + (receiver.device?.osVersion?.let { " — iPhone Anda iOS $it" } ?: ""),
                         iosMajor?.let { it >= 18 },
                     )
-                    Check("AssistiveTouch aktif di iPhone (tidak dapat dideteksi dari tablet — periksa manual)", null)
-                    Spacer(Modifier.size(10.dp))
-                    if (!hid.registered) {
-                        PrimaryButton("Aktifkan kontrol Bluetooth", Icons.Outlined.Bluetooth, enabled = hid.permissionGranted) { vm.startHid() }
-                        if (!hid.permissionGranted) { Spacer(Modifier.size(6.dp)); InfoNote("Berikan izin Bluetooth di halaman Hubungkan iPhone.") }
-                        Spacer(Modifier.size(10.dp))
+                    hid.error?.let { Spacer(Modifier.size(6.dp)); InfoNote(it, color = Palette.Warn) }
+                    if (!hid.supported) InfoNote("Sistem tablet ini tidak menyediakan profil Bluetooth HID Device, jadi kontrol sentuh tidak tersedia.", color = Palette.Bad)
+                }
+            },
+            right = {
+                Panel(Modifier.fillMaxWidth(), title = "Pengaturan sentuhan") {
+                    Toggle("Indikator sentuhan", "Lingkaran di posisi jari & warna status gesture terakhir", s.showTouchIndicators) { v ->
+                        vm.update { it.copy(showTouchIndicators = v) }
                     }
+                    Toggle("Bar status sentuhan di Mirroring", "Pil kecil di pojok kiri bawah; bisa disembunyikan dari layar Mirroring", s.showTouchStatusBar) { v ->
+                        vm.update { it.copy(showTouchStatusBar = v) }
+                    }
+                    Toggle("Balik arah scroll 2 jari", "Jika scroll terasa terbalik", s.invertScroll) { v ->
+                        vm.update { it.copy(invertScroll = v) }
+                    }
+                    Spacer(Modifier.size(6.dp))
                     Label("Format pointer")
                     Choice(HidPointerMode.entries.map { it.label }, HidPointerMode.entries.indexOf(s.hidPointerMode)) { i ->
                         vm.update { it.copy(hidPointerMode = HidPointerMode.entries[i]) }
                     }
                     Spacer(Modifier.size(4.dp))
-                    InfoNote("Setelah mengganti format, lupakan tablet di iPhone (Pengaturan → Bluetooth) lalu pasangkan ulang — iOS menyimpan descriptor HID yang lama.")
+                    InfoNote("Absolut = ketukan tepat di posisi jari (iOS 18+). Setelah mengganti format, lupakan tablet di iPhone (Pengaturan → Bluetooth) lalu pasangkan ulang.")
                     Spacer(Modifier.size(10.dp))
                     Label("Pemetaan saat iPhone landscape")
                     Choice(HidOrientation.entries.map { it.label }, HidOrientation.entries.indexOf(s.hidOrientation)) { i ->
                         vm.update { it.copy(hidOrientation = HidOrientation.entries[i]) }
                     }
-                    Spacer(Modifier.size(8.dp))
-                    SecondaryButton("Uji pemetaan (pointer tanpa klik)", Icons.Outlined.GridOn, enabled = touch.hid.available) { vm.mappingTest() }
-                    Spacer(Modifier.size(6.dp))
-                    Toggle("Balik arah scroll 2 jari", "Jika scroll terasa terbalik (Natural Scrolling iPhone)", s.invertScroll) { v ->
-                        vm.update { it.copy(invertScroll = v) }
-                    }
                 }
-            },
-            right = {
-                Panel(Modifier.fillMaxWidth(), title = "XCTest / WebDriverAgent — multi-touch", subtitle = "Kerangka UI-testing resmi Apple", trailing = {
-                    Chip(if (touch.xctest.available) "Terhubung" else "Tidak terhubung", if (touch.xctest.available) Palette.Ok else Palette.TextTertiary)
-                }) {
-                    var url by remember(s.wdaUrl, receiver.device?.address) {
-                        mutableStateOf(
-                            s.wdaUrl.takeIf { it.isNotBlank() }
-                                ?.let { runCatching { com.aldiianshr.iphonemiror.input.touch.WebDriverAgentClient.parse(it).url }.getOrDefault(it) }
-                                ?: vm.defaultWdaUrl() ?: "",
-                        )
-                    }
-                    OutlinedTextField(
-                        value = url, onValueChange = { url = it }, singleLine = true,
-                        label = { Text("URL WebDriverAgent") },
-                        placeholder = { Text("http://<IP iPhone>:8100") },
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                    Spacer(Modifier.size(8.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        if (!touch.xctest.available) {
-                            PrimaryButton(if (wdaBusy) "Mencari…" else "Cari & hubungkan otomatis", Icons.Outlined.Link, enabled = !wdaBusy,
-                                modifier = Modifier.testTag("wda_auto")) {
-                                vm.autoConnectWda(url)
-                            }
-                            SecondaryButton("Hubungkan URL ini", enabled = !wdaBusy && url.isNotBlank()) {
-                                vm.update { it.copy(wdaUrl = url) }
-                                vm.connectWda(url)
-                            }
-                        } else {
-                            SecondaryButton("Putuskan", Icons.Outlined.LinkOff) { vm.disconnectWda() }
+                Panel(Modifier.fillMaxWidth(), title = "Yang bisa dilakukan", subtitle = "Lewat Bluetooth (tanpa perangkat lain)") {
+                    Matrix1("Tap, double tap, long press", true)
+                    Matrix1("Swipe atas/bawah/kiri/kanan", true)
+                    Matrix1("Drag & drop", true)
+                    Matrix1("Scroll dengan 2 jari", true)
+                    Matrix1("Mengetik teks (keyboard)", true)
+                    Matrix1("Tombol Home, volume, play/pause", true)
+                    Matrix1("Pinch zoom & gesture 3+ jari", false)
+                    Spacer(Modifier.size(6.dp))
+                    InfoNote("iOS hanya menerima satu pointer dari perangkat Bluetooth, jadi pinch tidak mungkin. Untuk zoom, ketuk dua kali (di Foto/Peta/Safari) atau gunakan tombol zoom aplikasi.")
+                }
+                Panel(Modifier.fillMaxWidth(), title = "Opsi lanjutan") {
+                    Toggle("XCTest / WebDriverAgent (butuh komputer macOS)", "Multi-touch & pinch, tetapi memerlukan komputer dengan Xcode yang terus berjalan",
+                        s.showAdvancedTouch) { v -> vm.update { it.copy(showAdvancedTouch = v, touchBackend = if (v) it.touchBackend else TouchBackendPref.AUTO) } }
+                }
+                if (s.showAdvancedTouch) {
+                    Panel(Modifier.fillMaxWidth(), title = "XCTest / WebDriverAgent — multi-touch", subtitle = "Butuh komputer macOS + Xcode", trailing = {
+                        Chip(if (touch.xctest.available) "Terhubung" else "Tidak terhubung", if (touch.xctest.available) Palette.Ok else Palette.TextTertiary)
+                    }) {
+                        Label("Jalur input")
+                        Choice(TouchBackendPref.entries.map { it.label }, TouchBackendPref.entries.indexOf(s.touchBackend)) { i ->
+                            vm.update { it.copy(touchBackend = TouchBackendPref.entries[i]) }
                         }
-                    }
-                    Spacer(Modifier.size(8.dp))
-                    KeyValue("Status", touch.xctest.reason)
-                    KeyValue("Latensi", touch.connectionLatencyMs?.let { "$it ms (ping /status)" })
-                    wdaMsg?.let { InfoNote(it) }
-                    if (probes.isNotEmpty()) {
                         Spacer(Modifier.size(8.dp))
-                        Text("Hasil pencarian", style = MaterialTheme.typography.labelMedium, color = Palette.TextSecondary)
-                        probes.forEach { pr ->
-                            val ok = pr.outcome == WebDriverAgentClient.ProbeResult.Outcome.OK
-                            Row(Modifier.fillMaxWidth().padding(vertical = 3.dp), verticalAlignment = Alignment.Top) {
-                                Icon(if (ok) Icons.Outlined.CheckCircle else Icons.Outlined.Close, null,
-                                    tint = if (ok) Palette.Ok else Palette.Warn, modifier = Modifier.size(16.dp))
-                                Spacer(Modifier.width(8.dp))
-                                Column {
-                                    Text(pr.url, style = com.aldiianshr.iphonemiror.ui.theme.Mono, color = Palette.Text)
-                                    Text(pr.detail + (pr.rttMs?.let { " ($it ms)" } ?: ""), style = MaterialTheme.typography.bodySmall, color = Palette.TextSecondary)
-                                }
-                            }
-                        }
+                        WdaSection(vm, s.wdaUrl, receiver.device?.address, touch, wdaBusy, wdaMsg, probes)
                     }
-                    if (vm.onIphoneHotspot()) {
-                        Spacer(Modifier.size(6.dp))
-                        InfoNote("Tablet tersambung ke Hotspot Pribadi iPhone — alamat IPv4 iPhone 172.20.10.1 ikut dicoba otomatis.")
-                    }
-                    Spacer(Modifier.size(10.dp))
-                    WdaGuide()
-                }
-                Panel(Modifier.fillMaxWidth(), title = "Dukungan gesture", subtitle = "Apa yang benar-benar dapat dikirim tiap jalur") {
-                    MatrixHeader()
-                    Matrix("Single tap / double tap", true, true)
-                    Matrix("Long press", true, true)
-                    Matrix("Swipe atas/bawah/kiri/kanan", true, true)
-                    Matrix("Drag & drop", true, true)
-                    Matrix("Scroll 2 jari", true, true)
-                    Matrix("Pinch in / out", false, true)
-                    Matrix("Gesture 3+ jari", false, true)
-                    Matrix("Mengikuti jari secara langsung", true, false)
-                    Matrix("Ketik teks", true, true)
-                    Spacer(Modifier.size(6.dp))
-                    InfoNote("HID: satu pointer yang mengikuti jari secara real-time. XCTest: gesture diputar ulang tepat (multi-touch) setelah jari diangkat. AirPlay sendiri tidak membawa input.")
                 }
             },
         )
     }
+}
+
+@Composable
+private fun Step(n: Int, title: String, done: Boolean?, content: @Composable () -> Unit) {
+    Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), verticalAlignment = Alignment.Top) {
+        Box(
+            Modifier.size(24.dp).clip(RoundedCornerShape(50)).background(
+                when (done) { true -> Palette.Ok; else -> Palette.SurfaceHigher },
+            ),
+            contentAlignment = Alignment.Center,
+        ) {
+            if (done == true) Icon(Icons.Outlined.Check, null, tint = Palette.OnAccent, modifier = Modifier.size(16.dp))
+            else Text("$n", style = MaterialTheme.typography.labelMedium, color = Palette.Text)
+        }
+        Spacer(Modifier.width(12.dp))
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(title, style = MaterialTheme.typography.bodyLarge, color = if (done == true) Palette.TextSecondary else Palette.Text)
+            content()
+        }
+    }
+}
+
+@Composable
+private fun Matrix1(label: String, ok: Boolean) {
+    Row(Modifier.fillMaxWidth().padding(vertical = 5.dp), verticalAlignment = Alignment.CenterVertically) {
+        Text(label, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium, color = Palette.Text)
+        Mark(ok, Modifier.width(40.dp))
+    }
+}
+
+@Composable
+private fun WdaSection(
+    vm: TouchViewModel,
+    savedUrl: String,
+    deviceAddress: String?,
+    touch: com.aldiianshr.iphonemiror.input.touch.TouchControlState,
+    wdaBusy: Boolean,
+    wdaMsg: String?,
+    probes: List<WebDriverAgentClient.ProbeResult>,
+) {
+    var url by remember(savedUrl, deviceAddress) {
+        mutableStateOf(
+            savedUrl.takeIf { it.isNotBlank() }
+                ?.let { runCatching { WebDriverAgentClient.parse(it).url }.getOrDefault(it) }
+                ?: vm.defaultWdaUrl() ?: "",
+        )
+    }
+    OutlinedTextField(
+        value = url, onValueChange = { url = it }, singleLine = true,
+        label = { Text("URL WebDriverAgent") },
+        placeholder = { Text("http://<IP iPhone>:8100") },
+        modifier = Modifier.fillMaxWidth(),
+    )
+    Spacer(Modifier.size(8.dp))
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        if (!touch.xctest.available) {
+            PrimaryButton(if (wdaBusy) "Mencari…" else "Cari & hubungkan otomatis", Icons.Outlined.Link, enabled = !wdaBusy,
+                modifier = Modifier.testTag("wda_auto")) { vm.autoConnectWda(url) }
+            SecondaryButton("Hubungkan URL ini", enabled = !wdaBusy && url.isNotBlank()) {
+                vm.update { it.copy(wdaUrl = url) }
+                vm.connectWda(url)
+            }
+        } else {
+            SecondaryButton("Putuskan", Icons.Outlined.LinkOff) { vm.disconnectWda() }
+        }
+    }
+    Spacer(Modifier.size(8.dp))
+    KeyValue("Status", touch.xctest.reason)
+    KeyValue("Latensi", touch.connectionLatencyMs?.let { "$it ms (ping /status)" })
+    wdaMsg?.let { InfoNote(it) }
+    if (probes.isNotEmpty()) {
+        Spacer(Modifier.size(8.dp))
+        Text("Hasil pencarian", style = MaterialTheme.typography.labelMedium, color = Palette.TextSecondary)
+        probes.forEach { pr ->
+            val ok = pr.outcome == WebDriverAgentClient.ProbeResult.Outcome.OK
+            Row(Modifier.fillMaxWidth().padding(vertical = 3.dp), verticalAlignment = Alignment.Top) {
+                Icon(if (ok) Icons.Outlined.CheckCircle else Icons.Outlined.Close, null,
+                    tint = if (ok) Palette.Ok else Palette.Warn, modifier = Modifier.size(16.dp))
+                Spacer(Modifier.width(8.dp))
+                Column {
+                    Text(pr.url, style = com.aldiianshr.iphonemiror.ui.theme.Mono, color = Palette.Text)
+                    Text(pr.detail + (pr.rttMs?.let { " ($it ms)" } ?: ""), style = MaterialTheme.typography.bodySmall, color = Palette.TextSecondary)
+                }
+            }
+        }
+    }
+    Spacer(Modifier.size(10.dp))
+    WdaGuide()
 }
 
 /** Step-by-step WebDriverAgent setup, collapsible. Honest about needing a computer. */

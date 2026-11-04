@@ -77,6 +77,7 @@ class ReceiverViewModel @Inject constructor(
 /** Device discovery over Wi-Fi (Bonjour), USB OTG and Bluetooth, plus the HID link. */
 @HiltViewModel
 class ConnectViewModel @Inject constructor(
+    private val settingsRepo: SettingsRepository,
     private val browser: AppleNetworkBrowser,
     private val usb: UsbAppleMonitor,
     private val ble: BluetoothAppleScanner,
@@ -101,8 +102,8 @@ class ConnectViewModel @Inject constructor(
     fun scanBluetooth() = ble.scan()
     fun refreshBluetooth() { ble.refresh(); hid.refresh() }
 
-    fun startHid() = hid.start()
-    fun stopHid() = hid.stop()
+    fun startHid() = viewModelScope.launch { settingsRepo.update { it.copy(hidEnabled = true) } }
+    fun stopHid() = viewModelScope.launch { settingsRepo.update { it.copy(hidEnabled = false) } }
     fun connectHid(address: String) = hid.connect(address)
     fun disconnectHid() = hid.disconnect()
 
@@ -174,7 +175,19 @@ class TouchViewModel @Inject constructor(
     fun home() = touch.home()
     fun mappingTest() = touch.runMappingTest()
     fun defaultWdaUrl(): String? = touch.defaultWdaUrl()
-    fun startHid() = hid.start()
+    /** Switches the tablet's Bluetooth keyboard/pointer on or off (persisted, restored at start). */
+    fun setHidEnabled(on: Boolean) = update { it.copy(hidEnabled = on) }
+    fun startHid() = setHidEnabled(true)
+    fun refreshBluetooth() = hid.refresh()
+    fun searchIphone() = hid.startDiscovery()
+    fun stopSearch() = hid.stopDiscovery()
+    fun pair(address: String) = hid.pairAndConnect(address)
+    fun disconnectHid() = hid.disconnect()
+    fun forgetIphone() {
+        hid.setPreferredHost(null)
+        hid.disconnect()
+        update { it.copy(hidHostAddress = "", hidHostName = "") }
+    }
     fun update(transform: (AppSettings) -> AppSettings) = viewModelScope.launch { settingsRepo.update(transform) }
 
     fun connectWda(url: String) {

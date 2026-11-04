@@ -365,15 +365,17 @@ class TouchControlManager(
             !h.permissionGranted -> BackendStatus(false, "Izin Bluetooth belum diberikan", true, false)
             !h.bluetoothOn -> BackendStatus(false, "Bluetooth mati", true, false)
             !h.registered -> BackendStatus(false, "Kontrol Bluetooth belum diaktifkan", true, false)
-            h.link != BluetoothHidController.Link.CONNECTED -> BackendStatus(false, "iPhone belum terhubung sebagai host Bluetooth", true, false)
+            h.link != BluetoothHidController.Link.CONNECTED -> BackendStatus(false, "iPhone belum tersambung ke tablet lewat Bluetooth", true, false)
             else -> BackendStatus(true,
                 if (translator.absolute) "Terhubung ke ${h.host} — pointer absolut (butuh iOS 18+ dan AssistiveTouch)"
                 else "Terhubung ke ${h.host} — mode trackpad relatif (AssistiveTouch)", true, false)
         }
-        val wdaOk = wda != null && wdaSession != null
+        val advanced = settings.showAdvancedTouch || settings.touchBackend == TouchBackendPref.XCTEST
+        val wdaOk = advanced && wda != null && wdaSession != null
         val xcStatus = if (wdaOk) BackendStatus(true, "Sesi XCTest aktif di ${wda?.baseUrl}", false, true)
         else _state.value.xctest.copy(available = false)
-        val active = when (settings.touchBackend) {
+        val pref = if (advanced) settings.touchBackend else TouchBackendPref.BLUETOOTH_HID
+        val active = when (pref) {
             TouchBackendPref.BLUETOOTH_HID -> BackendKind.BLUETOOTH_HID.takeIf { hidStatus.available }
             TouchBackendPref.XCTEST -> BackendKind.XCTEST.takeIf { xcStatus.available }
             TouchBackendPref.AUTO -> when {
@@ -383,8 +385,8 @@ class TouchControlManager(
             }
         }
         val reason = if (active != null) null else buildString {
-            append("AirPlay hanya mengirim gambar; iOS tidak menerima sentuhan lewat AirPlay. ")
-            when (settings.touchBackend) {
+            append("AirPlay hanya mengirim gambar; sentuhan dikirim lewat Bluetooth. ")
+            when (pref) {
                 TouchBackendPref.BLUETOOTH_HID -> append("Bluetooth HID: ${hidStatus.reason}.")
                 TouchBackendPref.XCTEST -> append("XCTest: ${xcStatus.reason}.")
                 TouchBackendPref.AUTO -> append("Bluetooth HID: ${hidStatus.reason}. XCTest: ${xcStatus.reason}.")

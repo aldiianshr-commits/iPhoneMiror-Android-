@@ -82,15 +82,25 @@ Statistik menampilkan respon rata-rata (10 gesture terakhir) dan latensi koneksi
 - **Fullscreen Touch** — Touch Mode + layar penuh; toolbar disembunyikan, tombol kecil ⋯ di pojok untuk memunculkannya.
 - **Rasio asli / Isi / Fit to screen** — mode skala; pemetaan sentuhan mengikuti otomatis.
 
-## Persiapan di iPhone
+## Persiapan: hanya tablet + iPhone (Bluetooth HID — jalur utama)
 
-**Bluetooth HID (disarankan untuk real-time):**
-1. Tablet: *Kontrol Sentuh → Aktifkan kontrol Bluetooth*, lalu *Hubungkan iPhone → Buat terlihat*.
-2. iPhone: *Pengaturan → Bluetooth* → pilih tablet.
-3. iPhone: *Pengaturan → Aksesibilitas → Sentuh → AssistiveTouch* → **aktif**. iOS 18 atau lebih baru.
-4. Jalankan *Uji pemetaan*. Bila iPhone landscape dan pointer meleset, ganti opsi pemetaan.
+Tidak butuh komputer, kabel, atau aplikasi di iPhone. Halaman **Kontrol Sentuh** memandu 6 langkah dengan tanda centang:
 
-**XCTest / WebDriverAgent (untuk pinch & multi-touch):**
+1. Izin Bluetooth di tablet.
+2. Bluetooth tablet menyala.
+3. **Aktifkan kontrol Bluetooth** (tersimpan; dinyalakan lagi otomatis saat aplikasi dibuka).
+4. **Sambungkan iPhone** — buka *Pengaturan → Bluetooth* di iPhone dan biarkan terbuka, lalu di tablet
+   *Cari iPhone* → *Pasangkan* → konfirmasi kode yang sama di kedua perangkat. (Alternatif: *Buat tablet
+   terlihat* lalu pilih tablet dari iPhone.) iPhone yang berhasil diingat dan **tersambung ulang otomatis**
+   setiap 10 detik bila terputus.
+5. iPhone: *Pengaturan → Aksesibilitas → Sentuh → AssistiveTouch* → **aktif** (iOS 18+ untuk pointer absolut).
+6. **Uji pemetaan** saat mirroring: pointer harus bergerak ke tengah & empat sudut.
+
+Lalu di Mirroring pilih **Touch Mode**. Batas jalur ini: satu pointer — pinch dan gesture 3+ jari tidak mungkin.
+
+## Opsi lanjutan: XCTest / WebDriverAgent (butuh komputer macOS)
+
+Disembunyikan secara default (*Kontrol Sentuh → Opsi lanjutan*). Langkah:
 1. Mac dengan Xcode, Apple ID (gratis cukup), *Mode Pengembang* aktif di iPhone.
 2. Build & jalankan target `WebDriverAgentRunner` (repo `appium/WebDriverAgent`) ke iPhone.
 3. Di tablet, *Kontrol Sentuh → URL WebDriverAgent* (otomatis dari koneksi AirPlay, mis.

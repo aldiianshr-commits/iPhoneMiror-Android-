@@ -32,7 +32,7 @@ Semua screenshot: [docs/screenshots](docs/screenshots).
 | Video | H.264 didekripsi (FairPlay) lalu di-decode hardware via **MediaCodec** langsung ke Surface |
 | Audio | AAC-ELD → MediaCodec → AudioTrack low-latency |
 | Sentuh langsung (real-time) | Tablet menjadi **pointer absolut Bluetooth HID** (iOS 18+, AssistiveTouch): tap, double tap, long press, swipe, drag & drop, scroll 2 jari |
-| Multi-touch (pinch, 2+ jari) | **XCTest / WebDriverAgent** (alat UI-testing resmi Apple, akun developer sendiri) — lihat [docs/TOUCH_CONTROL.md](docs/TOUCH_CONTROL.md) |
+| Multi-touch (pinch, 3+ jari) | Tidak mungkin dengan hanya dua perangkat. Opsi lanjutan XCTest/WebDriverAgent butuh komputer macOS — [docs/TOUCH_CONTROL.md](docs/TOUCH_CONTROL.md) |
 | USB OTG | Deteksi, izin, dan identifikasi iPhone (UDID/produk). *Mirroring via USB tidak tersedia.* |
 | Bluetooth | Discovery perangkat Apple (BLE) + kanal kontrol HID. *Bukan untuk video.* |
 | Apple Account | Halaman status yang jujur — tidak ada API resmi, tidak ada login, tidak meminta password. |
@@ -53,8 +53,9 @@ Persyaratan: Android 13 (API 33) atau lebih baru, ARM64 (APK tanpa library nativ
 2. Pastikan iPhone dan tablet di **Wi-Fi yang sama**.
 3. iPhone: **Pusat Kontrol → Pencerminan Layar → "iPhoneMiror (…)"**.
 4. Setujui perangkat di tablet (pertama kali). Tampilan **Mirroring** terbuka otomatis.
-5. Sentuh langsung: **Kontrol Sentuh → Aktifkan kontrol Bluetooth**, pasangkan tablet dari iPhone
-   (Pengaturan → Bluetooth), aktifkan **AssistiveTouch**, lalu di Mirroring pilih **Touch Mode**.
+5. Sentuh langsung (hanya tablet + iPhone): ikuti 6 langkah di **Kontrol Sentuh** — aktifkan kontrol
+   Bluetooth, *Cari iPhone* → *Pasangkan* dari tablet, aktifkan **AssistiveTouch** di iPhone, lalu di
+   Mirroring pilih **Touch Mode**. iPhone diingat dan tersambung ulang otomatis.
    Bila tidak ada jalur input, aplikasi menampilkan **Touch Control: Unsupported** beserta alasannya.
 
 Tips: jalankan **Pengaturan → Uji mandiri penerima** untuk memverifikasi jalur

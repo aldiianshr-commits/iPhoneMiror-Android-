@@ -143,6 +143,13 @@ data class AppSettings(
     val keepScreenOn: Boolean = true,
     val lowLatencyDecoder: Boolean = true,
     val touchBackend: TouchBackendPref = TouchBackendPref.AUTO,
+    /** Bluetooth keyboard/pointer is switched on (restored at app start). */
+    val hidEnabled: Boolean = false,
+    /** Last iPhone that accepted the tablet as keyboard/pointer; reconnected automatically. */
+    val hidHostAddress: String = "",
+    val hidHostName: String = "",
+    /** Shows options that need an extra computer (XCTest/WebDriverAgent). Off by default. */
+    val showAdvancedTouch: Boolean = false,
     val hidPointerMode: HidPointerMode = HidPointerMode.ABSOLUTE,
     val hidOrientation: HidOrientation = HidOrientation.FOLLOW_SCREEN,
     val invertScroll: Boolean = false,
